@@ -3,42 +3,77 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>POS Ropa — Offline (Clientes + Ventas + Códigos)</title>
+  <title>POS Boutique — Offline (Clientes + Ventas + Código de barras)</title>
+
   <style>
     :root{
-      --bg:#fff6fb;
+      --bg:#fff4fb;
       --panel:#ffffff;
-      --card:#ffffff;
-      --text:#2b2230;
+      --panel2:rgba(255,255,255,.78);
+      --text:#241b2a;
       --muted:#7a6b78;
-      --accent:#ff4fb7;
-      --accent2:#a855f7;
+
+      --pink:#ff4fb7;
+      --purple:#a855f7;
+      --rose:#fb7185;
+
       --ok:#22c55e;
       --warn:#f59e0b;
       --danger:#ef4444;
-      --border:rgba(35,20,35,.10);
-      --shadow:0 10px 30px rgba(17, 10, 20, .10);
-      --radius:18px;
-      --radius2:14px;
+
+      --border:rgba(36, 20, 40, .10);
+      --shadow: 0 16px 40px rgba(20, 10, 25, .10);
+      --shadow2: 0 10px 26px rgba(20, 10, 25, .07);
+
+      --radius: 22px;
+      --radius2: 16px;
+
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
+
+      --focus: 0 0 0 4px rgba(255,79,183,.15);
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
     body{
       margin:0;
       font-family:var(--font);
-      background: radial-gradient(1200px 700px at 20% 10%, #ffe4f3 0%, transparent 55%),
-                  radial-gradient(900px 600px at 80% 0%, #f3e8ff 0%, transparent 60%),
-                  var(--bg);
       color:var(--text);
+      overflow-x:hidden;
+
+      background:
+        radial-gradient(900px 650px at 18% 8%, rgba(255,79,183,.20), transparent 55%),
+        radial-gradient(800px 520px at 85% 5%, rgba(168,85,247,.20), transparent 60%),
+        radial-gradient(700px 520px at 70% 90%, rgba(251,113,133,.16), transparent 55%),
+        var(--bg);
+    }
+
+    /* subtle floating sparkles */
+    .sparkle{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.35;
+      mix-blend-mode:multiply;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(255,79,183,.22) 0 2px, transparent 3px),
+        radial-gradient(circle at 84% 22%, rgba(168,85,247,.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 62% 78%, rgba(251,113,133,.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 28% 72%, rgba(255,79,183,.14) 0 2px, transparent 3px);
+      animation: drift 12s ease-in-out infinite alternate;
+      filter: blur(.2px);
+    }
+    @keyframes drift{
+      from{ transform: translate3d(0,0,0) scale(1); }
+      to{ transform: translate3d(-10px, 8px, 0) scale(1.02); }
     }
 
     .app{
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 0 auto;
       padding: 18px;
       display:grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 320px 1fr;
       gap:16px;
     }
 
@@ -48,12 +83,18 @@
       top: 14px;
       align-self: start;
       height: calc(100vh - 28px);
-      background: linear-gradient(180deg, #ffffff 0%, #fff7fc 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,247,252,.92) 100%);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 14px;
       overflow:auto;
+
+      animation: pop .35s ease-out both;
+    }
+    @keyframes pop{
+      from{ transform: translateY(8px); opacity:0; }
+      to{ transform: translateY(0); opacity:1; }
     }
 
     .brand{
@@ -66,29 +107,30 @@
       margin-bottom: 12px;
     }
     .brand h1{
-      font-size: 16px;
+      font-size: 15px;
       margin:0;
       line-height:1.15;
       letter-spacing:.2px;
+      font-weight: 1000;
     }
-    .brand small{display:block;color:var(--muted); font-weight:600; margin-top:2px}
+    .brand small{display:block;color:var(--muted); font-weight:800; margin-top:2px}
+
     .hamburger{
-      width:40px;height:40px;border-radius:14px;
+      width:42px;height:42px;border-radius:16px;
       border:1px solid var(--border);
       background:#fff;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      box-shadow: 0 6px 18px rgba(17,10,20,.06);
+      box-shadow: 0 10px 22px rgba(17,10,20,.07);
+      transition: transform .18s ease, box-shadow .18s ease;
     }
-    .hamburger:hover{transform: translateY(-1px)}
-    .hamburger:active{transform: translateY(0)}
-    .burger{
-      width:18px;height:12px; position:relative;
-    }
+    .hamburger:hover{ transform: translateY(-1px); box-shadow: 0 14px 28px rgba(17,10,20,.10); }
+    .hamburger:active{ transform: translateY(0); }
+    .burger{ width:18px;height:12px; position:relative; }
     .burger span{
       position:absolute; left:0; right:0;
       height:2px; border-radius:999px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      background: linear-gradient(90deg, var(--pink), var(--purple));
     }
     .burger span:nth-child(1){top:0}
     .burger span:nth-child(2){top:5px}
@@ -103,150 +145,213 @@
     .nav button{
       width:100%;
       padding:12px 12px;
-      border-radius: 14px;
+      border-radius: 16px;
       border:1px solid var(--border);
       background:#fff;
       cursor:pointer;
-      font-weight:800;
+      font-weight:900;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      box-shadow: 0 6px 18px rgba(17,10,20,.05);
+      box-shadow: var(--shadow2);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .nav button:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(20,10,25,.09);
     }
     .nav button .tag{
-      font-weight:900;
+      font-weight:1000;
       font-size:12px;
       padding: 4px 10px;
       border-radius:999px;
-      background: linear-gradient(90deg, rgba(255,79,183,.15), rgba(168,85,247,.15));
+      background: linear-gradient(90deg, rgba(255,79,183,.14), rgba(168,85,247,.14));
       color: #7b2fb4;
       border:1px solid rgba(168,85,247,.18);
+      white-space:nowrap;
     }
     .nav button.active{
-      border-color: rgba(255,79,183,.45);
-      box-shadow: 0 10px 26px rgba(255,79,183,.18);
-      background: linear-gradient(180deg, #fff 0%, #fff2fa 100%);
+      border-color: rgba(255,79,183,.55);
+      box-shadow: 0 18px 34px rgba(255,79,183,.18);
+      background: linear-gradient(180deg, #fff 0%, #fff1fa 100%);
     }
 
     .sidecard{
       margin-top:14px;
       padding:12px;
       border-radius: var(--radius);
-      border:1px dashed rgba(255,79,183,.35);
-      background: rgba(255,255,255,.85);
+      border:1px dashed rgba(255,79,183,.38);
+      background: rgba(255,255,255,.84);
     }
-    .sidecard .row{
-      display:flex; justify-content:space-between; gap:10px; margin:8px 0;
-      color:var(--muted); font-weight:700;
-    }
-    .sidecard .row b{color:var(--text)}
     .pill{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      font-weight:900;
-      color:#8a2be2;
+      font-weight:1000;
+      color:#7b2fb4;
       background: rgba(168,85,247,.12);
       border:1px solid rgba(168,85,247,.25);
       padding: 6px 10px;
       border-radius:999px;
     }
+    .sidecard .row{
+      display:flex; justify-content:space-between; gap:10px; margin:8px 0;
+      color:var(--muted); font-weight:800;
+    }
+    .sidecard .row b{color:var(--text)}
 
-.main{
-  min-height: calc(100vh - 36px);
-  background: rgba(255,255,255,.60);
-  border:1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 14px;
+    /* Main */
+    .main{
+      min-height: calc(100vh - 36px);
+      background: var(--panel2);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      overflow: visible; /* key: don't cut the right card */
+      animation: pop .35s ease-out both;
+      max-width:100%;
+    }
 
-  /* 🔥 clave: evita que el contenido se "corte" */
-  overflow: visible;
-}
+    .topbar{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 6px 6px 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .title{ display:flex; flex-direction:column; gap:2px; }
+    .title h2{margin:0;font-size:18px}
+    .title p{margin:0;color:var(--muted);font-weight:800;font-size:13px}
 
-/* 🔥 clave: minmax(0, ...) evita overflow horizontal por inputs/selects */
-.grid{
-  display:grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 14px;
-  margin-top: 14px;
-}
+    .actions{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
 
-/* 🔥 clave: inputs y tarjetas no empujan el ancho */
-.card, .field, .rowflex, .table{
-  min-width: 0;
-}
-.field input, .field select, .field textarea{
-  min-width: 0;
-}
+    .btn{
+      border:none;
+      cursor:pointer;
+      font-weight:1000;
+      padding: 11px 14px;
+      border-radius: 16px;
+      background:#fff;
+      border:1px solid var(--border);
+      box-shadow: 0 10px 22px rgba(17,10,20,.06);
+      color:var(--text);
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 16px 30px rgba(17,10,20,.09); }
+    .btn:active{ transform: translateY(0); }
+    .btn.small{ padding:9px 12px; border-radius:14px; font-weight:1000; }
 
-/* Si la pantalla es mediana/pequeña, baja a 1 columna */
-@media (max-width: 1100px){
-  .grid{ grid-template-columns: 1fr; }
-}
+    .btn.primary{
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+      color:white;
+      border:none;
+      box-shadow: 0 16px 34px rgba(255,79,183,.26);
+    }
+    .btn.ok{
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      color:white;border:none;
+      box-shadow: 0 16px 34px rgba(34,197,94,.22);
+    }
+    .btn.danger{
+      background: linear-gradient(90deg, #ef4444, #b91c1c);
+      color:white;border:none;
+      box-shadow: 0 16px 34px rgba(239,68,68,.22);
+    }
 
+    /* Key: minmax(0,...) prevents horizontal overflow from inputs/selects */
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card, .field, .rowflex, .table{ min-width:0; }
 
     .card{
       background: rgba(255,255,255,.90);
       border:1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: 0 10px 26px rgba(17,10,20,.06);
+      box-shadow: var(--shadow2);
       padding: 14px;
+      overflow:hidden;
+      position:relative;
     }
-    .card h3{margin:0 0 10px 0; font-size:15px}
-    .muted{color:var(--muted); font-weight:700; font-size:13px}
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      pointer-events:none;
+      opacity:0;
+      border-radius: calc(var(--radius) + 2px);
+      background: radial-gradient(700px 180px at 20% 0%, rgba(255,79,183,.12), transparent 50%),
+                  radial-gradient(700px 180px at 80% 0%, rgba(168,85,247,.12), transparent 50%);
+      transition: opacity .22s ease;
+    }
+    .card:hover::after{ opacity:1; }
+
+    .card h3{margin:0 0 10px 0; font-size:15px; font-weight:1000}
+    .muted{color:var(--muted); font-weight:800; font-size:13px}
 
     .form{
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:10px;
     }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
+    .field{ display:flex; flex-direction:column; gap:6px; }
     .field label{
       font-size:12px;
       color:var(--muted);
-      font-weight:900;
+      font-weight:1000;
       letter-spacing:.2px;
     }
     .field input, .field select, .field textarea{
       padding: 12px 12px;
-      border-radius: 14px;
+      border-radius: 16px;
       border:1px solid var(--border);
       background:#fff;
       outline:none;
-      font-weight:800;
+      font-weight:900;
       color:var(--text);
+      min-width:0;
+      transition: box-shadow .18s ease, border-color .18s ease, transform .18s ease;
     }
     .field input:focus, .field select:focus, .field textarea:focus{
-      border-color: rgba(255,79,183,.45);
-      box-shadow: 0 0 0 4px rgba(255,79,183,.12);
+      border-color: rgba(255,79,183,.55);
+      box-shadow: var(--focus);
     }
+
     .field.full{grid-column:1 / -1}
 
-    .rowflex{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .rowflex .grow{flex:1}
+    .rowflex{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .rowflex .grow{ flex:1; }
 
     .table{
       width:100%;
       border-collapse: collapse;
       overflow:hidden;
-      border-radius: 14px;
+      border-radius: 16px;
       border:1px solid var(--border);
+      background:#fff;
     }
     .table th, .table td{
       padding:10px 10px;
       border-bottom:1px solid var(--border);
       text-align:left;
-      font-weight:800;
+      font-weight:900;
       font-size:13px;
+      vertical-align:top;
     }
-    .table th{background: rgba(255,79,183,.08); color:#6b1f5b}
-    .table td small{color:var(--muted); font-weight:800}
+    .table th{
+      background: rgba(255,79,183,.09);
+      color:#6b1f5b;
+    }
+    .table td small{color:var(--muted); font-weight:900}
     .table tr:last-child td{border-bottom:none}
 
     .totals{
@@ -260,26 +365,29 @@
       border-radius: var(--radius2);
       border:1px solid var(--border);
       background: rgba(255,255,255,.92);
+      box-shadow: 0 10px 22px rgba(17,10,20,.05);
     }
-    .kpi .label{color:var(--muted); font-weight:900; font-size:12px}
-    .kpi .value{font-size:18px; font-weight:1000; margin-top:4px}
-    .kpi .value span{font-size:12px; color:var(--muted); font-weight:900}
+    .kpi .label{ color:var(--muted); font-weight:1000; font-size:12px }
+    .kpi .value{ font-size:18px; font-weight:1100; margin-top:4px }
+    .kpi .value span{ font-size:12px; color:var(--muted); font-weight:1000 }
 
-    .hide{display:none !important;}
+    .hide{ display:none !important; }
 
     /* Receipt */
-    .receiptWrap{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-    }
+    .receiptWrap{ display:flex; gap:12px; flex-wrap:wrap; }
     .receipt{
       width: 360px;
       background: #ffffff;
       border:1px solid rgba(0,0,0,.08);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px;
-      box-shadow: 0 12px 26px rgba(0,0,0,.10);
+      box-shadow: 0 18px 34px rgba(0,0,0,.11);
+      transform-origin: top center;
+      animation: floatIn .35s ease-out both;
+    }
+    @keyframes floatIn{
+      from{ transform: translateY(10px) scale(.98); opacity:0; }
+      to{ transform: translateY(0) scale(1); opacity:1; }
     }
     .receipt .logo{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -287,38 +395,34 @@
       border-bottom:1px dashed rgba(0,0,0,.12);
       margin-bottom:10px;
     }
-    .receipt .logo b{
-      font-size:14px;
-      letter-spacing:.3px;
-    }
-    .receipt .logo small{display:block;color:#666;font-weight:800}
-    .receipt .line{display:flex; justify-content:space-between; gap:10px; font-weight:900; font-size:12px; margin:6px 0}
-    .receipt .hr{height:1px;background:rgba(0,0,0,.08); margin:10px 0}
-    .receipt .big{
-      font-size:16px;
-      font-weight:1000;
-      display:flex; justify-content:space-between;
-      margin-top:10px;
-    }
-    .receipt .foot{margin-top:10px; font-size:11px; color:#666; font-weight:800}
+    .receipt .logo b{ font-size:14px; letter-spacing:.3px; }
+    .receipt .logo small{ display:block; color:#666; font-weight:900 }
+    .receipt .line{ display:flex; justify-content:space-between; gap:10px; font-weight:1000; font-size:12px; margin:6px 0 }
+    .receipt .hr{ height:1px; background:rgba(0,0,0,.08); margin:10px 0 }
+    .receipt .big{ font-size:16px; font-weight:1200; display:flex; justify-content:space-between; margin-top:10px; }
+    .receipt .foot{ margin-top:10px; font-size:11px; color:#666; font-weight:900 }
 
     /* Responsive */
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: 1fr; }
+    }
     @media (max-width: 980px){
-      .app{grid-template-columns: 1fr;}
-      .sidebar{position:relative; height:auto;}
-      .grid{grid-template-columns: 1fr;}
-      .receipt{width:100%;}
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; height:auto; }
+      .receipt{ width:100%; }
     }
   </style>
 </head>
 <body>
+  <div class="sparkle"></div>
+
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div>
-          <h1>POS Ropa <small>Offline • Cliente + Ventas + Recibos</small></h1>
+          <h1>POS Boutique <small>Offline • Clientes + Ventas + Recibos</small></h1>
         </div>
-        <button class="hamburger" id="btnToggle">
+        <button class="hamburger" id="btnToggle" title="Menú">
           <div class="burger"><span></span><span></span><span></span></div>
         </button>
       </div>
@@ -332,13 +436,13 @@
       </div>
 
       <div class="sidecard">
-        <div class="pill">💗 Estilo femenino</div>
+        <div class="pill">💗 Moderno + femenino</div>
         <div class="row"><span>Clientes</span><b id="kClients">0</b></div>
         <div class="row"><span>Productos</span><b id="kProducts">0</b></div>
         <div class="row"><span>Ventas (hoy)</span><b id="kSalesToday">0</b></div>
         <div class="row"><span>Total (hoy)</span><b id="kTotalToday">Q0.00</b></div>
         <div class="muted" style="margin-top:10px">
-          Consejo: usa <b>Escanear</b> y luego pasa los productos con el lector.
+          Tip: usa <b>Escanear</b> y pasa el lector. (F2 enfoca el campo)
         </div>
       </div>
     </aside>
@@ -347,7 +451,7 @@
       <div class="topbar">
         <div class="title">
           <h2 id="viewTitle">Cobro (POS)</h2>
-          <p id="viewSub">Escanea productos, selecciona pago y genera comprobante para WhatsApp.</p>
+          <p id="viewSub">Escanea productos, elige pago y genera comprobante para WhatsApp/PDF.</p>
         </div>
         <div class="actions">
           <button class="btn small" id="btnBackup">Exportar JSON</button>
@@ -366,10 +470,10 @@
               <div class="field full">
                 <label>Escanear código de barras (SKU / Código)</label>
                 <div class="rowflex">
-                  <input id="scanInput" class="grow" inputmode="numeric" placeholder="Ej: 7501234567890 (Enter para agregar)" />
+                  <input id="scanInput" class="grow" inputmode="text" placeholder="Ej: 7501234567890 (Enter para agregar)" />
                   <button class="btn primary" id="btnScan">Escanear</button>
                 </div>
-                <div class="muted">Tip: tu lector escribe el código aquí y presiona Enter.</div>
+                <div class="muted">Tu lector normalmente escribe aquí y manda Enter.</div>
               </div>
 
               <div class="field">
@@ -397,7 +501,7 @@
                   <th>Producto</th>
                   <th style="width:110px">Precio</th>
                   <th style="width:110px">Total</th>
-                  <th style="width:85px">Acción</th>
+                  <th style="width:110px">Acción</th>
                 </tr>
               </thead>
               <tbody id="cartBody"></tbody>
@@ -420,7 +524,7 @@
             </div>
 
             <div class="muted" style="margin-top:10px">
-              *Si eliges <b>Envío</b>, el sistema te obligará a ingresar/buscar cliente por teléfono.
+              *Si eliges <b>ENVÍO</b>, es obligatorio registrar/buscar cliente por teléfono.
             </div>
           </div>
 
@@ -482,11 +586,11 @@
               <div class="rowflex">
                 <button class="btn" id="btnCopyReceipt">Copiar texto</button>
                 <button class="btn" id="btnPDF">PDF</button>
-                <button class="btn" id="btnDownloadReceipt">Descargar PNG</button>
+                <button class="btn" id="btnDownloadReceipt">PNG</button>
                 <button class="btn primary" id="btnWhatsApp">WhatsApp</button>
               </div>
               <div class="muted" style="margin-top:10px">
-                WhatsApp: abre chat con el texto listo. En PC puede abrir WhatsApp Web.
+                PDF abre impresión (Guardar como PDF). WhatsApp abre texto listo.
               </div>
             </div>
 
@@ -538,7 +642,7 @@
                   <th>Teléfono</th>
                   <th>Nombre</th>
                   <th>Dirección</th>
-                  <th style="width:120px">Acción</th>
+                  <th style="width:140px">Acción</th>
                 </tr>
               </thead>
               <tbody id="clientsBody"></tbody>
@@ -577,7 +681,7 @@
                   <th>Cliente</th>
                   <th>Pago</th>
                   <th>Total</th>
-                  <th style="width:140px">Acción</th>
+                  <th style="width:160px">Acción</th>
                 </tr>
               </thead>
               <tbody id="salesBody"></tbody>
@@ -633,7 +737,7 @@
                     <th>Producto</th>
                     <th>Precio</th>
                     <th>Stock</th>
-                    <th style="width:120px">Acción</th>
+                    <th style="width:140px">Acción</th>
                   </tr>
                 </thead>
                 <tbody id="productsBody"></tbody>
@@ -664,7 +768,6 @@
         </div>
       </section>
 
-      <!-- Hidden file input for restore -->
       <input type="file" id="restoreFile" accept="application/json" class="hide"/>
       <canvas id="cnv" class="hide"></canvas>
     </main>
@@ -672,22 +775,18 @@
 
 <script>
 /* ============================================================
-   POS ROPA OFFLINE (IndexedDB)
-   - Clientes por teléfono (clave)
-   - Productos por código
-   - Ventas con items, pago, tipo, cliente, timestamp
-   - Recibos: copiar texto / WhatsApp / PNG
+   POS Boutique Offline (IndexedDB)
+   - Fix: PDF generator does NOT embed <\/script> in template strings
 ============================================================ */
 
-const DB_NAME = "pos_ropa_offline_v1";
+const DB_NAME = "pos_boutique_offline_v1";
 const DB_VER = 1;
 let db;
 
 const state = {
   view: "pos",
   cart: [],
-  selectedClient: null, // {phone,names,last,addr}
-  allowWalkIn: true,
+  selectedClient: null,
   lastReceipt: null,
   settings: { shopName: "Tienda de Ropa" }
 };
@@ -701,6 +800,7 @@ function openDB(){
     const req = indexedDB.open(DB_NAME, DB_VER);
     req.onupgradeneeded = (e)=>{
       const db = e.target.result;
+
       if(!db.objectStoreNames.contains("clients")){
         const s = db.createObjectStore("clients", { keyPath:"phone" });
         s.createIndex("name", "nameKey", { unique:false });
@@ -771,7 +871,6 @@ function todayKey(ts=Date.now()){
   return `${y}-${m}-${day}`;
 }
 function weekKey(ts=Date.now()){
-  // ISO week-ish: y-w##
   const d = new Date(ts);
   const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = tmp.getUTCDay() || 7;
@@ -799,7 +898,7 @@ function pad(n,len=6){ return String(n).padStart(len,"0"); }
 
 // ---------- UI Nav ----------
 const views = {
-  pos: {title:"Cobro (POS)", sub:"Escanea productos, selecciona pago y genera comprobante para WhatsApp."},
+  pos: {title:"Cobro (POS)", sub:"Escanea productos, elige pago y genera comprobante para WhatsApp/PDF."},
   clients: {title:"Clientes", sub:"Busca por teléfono, edita y usa para envíos."},
   reports: {title:"Reportes", sub:"Diario / Semanal / Mensual con historial de ventas."},
   products: {title:"Productos", sub:"Agrega productos con código, nombre, precio y stock."},
@@ -823,7 +922,7 @@ function setView(v){
   if(v==="reports") renderReport("daily");
 }
 
-// ---------- POS Cart ----------
+// ---------- Cart ----------
 function renderCart(){
   const body = $("cartBody");
   body.innerHTML = "";
@@ -912,7 +1011,7 @@ async function saveClientFromForm(){
 async function renderClients(){
   const q = normKey($("clientSearch").value);
   const all = await idbAll("clients");
-  const list = q ? all.filter(c => normKey(c.phone).includes(q) || c.nameKey.includes(q) || normKey(c.addr).includes(q)) : all;
+  const list = q ? all.filter(c => normKey(c.phone).includes(q) || (c.nameKey||"").includes(q) || normKey(c.addr).includes(q)) : all;
 
   const tb = $("clientsBody");
   tb.innerHTML = "";
@@ -964,7 +1063,7 @@ async function getProductByCode(code){
 async function renderProducts(){
   const q = normKey($("prodSearch").value);
   const all = await idbAll("products");
-  const list = q ? all.filter(p => normKey(p.code).includes(q) || p.nameKey.includes(q)) : all;
+  const list = q ? all.filter(p => normKey(p.code).includes(q) || (p.nameKey||"").includes(q)) : all;
 
   const tb = $("productsBody");
   tb.innerHTML = "";
@@ -987,7 +1086,7 @@ async function renderProducts(){
 async function refreshProductPicker(){
   const q = normKey($("productSearch").value);
   const all = await idbAll("products");
-  const list = q ? all.filter(p=>p.nameKey.includes(q) || normKey(p.code).includes(q)) : all;
+  const list = q ? all.filter(p=> (p.nameKey||"").includes(q) || normKey(p.code).includes(q)) : all;
 
   const sel = $("productPicker");
   sel.innerHTML = "";
@@ -998,7 +1097,7 @@ async function refreshProductPicker(){
     sel.appendChild(opt);
     return;
   }
-  for(const p of list.slice(0,250)){
+  for(const p of list.slice(0,300)){
     const opt = document.createElement("option");
     opt.value = p.code;
     opt.textContent = `${p.name} — ${p.code} — ${money(p.price)} — Stock:${p.stock}`;
@@ -1089,7 +1188,7 @@ async function checkout(){
   await refreshKPIs();
   refreshProductPicker();
   updateReceiptPreview();
-  alert("Venta registrada. Recibo listo para WhatsApp.");
+  alert("Venta registrada. Recibo listo para WhatsApp/PDF.");
 }
 
 // ---------- Reports ----------
@@ -1134,10 +1233,25 @@ async function renderReport(mode){
   }
 }
 
-// ---------- Receipt ----------
+// ---------- Receipt (text + preview + PDF + PNG) ----------
+function makeLiveReceipt(){
+  const saleType = $("saleType").value;
+  const payMethod = $("payMethod").value;
+  const c = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
+  return {
+    ts: Date.now(),
+    receiptNo: state.lastReceipt?.receiptNo || "------",
+    shop: state.settings.shopName,
+    saleType, payMethod,
+    client: c ? {phone:c.phone, names:c.names, last:c.last, addr:c.addr} : null,
+    items: state.cart.map(x=>({...x})),
+    total: cartTotal()
+  };
+}
+
 function saleToReceiptText(s){
   if(!s) return "No hay recibo todavía.";
-  const d = new Date(s.ts).toLocaleString();
+  const d = new Date(s.ts || Date.now()).toLocaleString();
   const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
   const phone = s.client?.phone || "—";
   const addr  = s.client?.addr || "—";
@@ -1150,22 +1264,21 @@ function saleToReceiptText(s){
   lines.push(`Tel: ${phone}`);
   lines.push(`Dir: ${addr}`);
   lines.push(`--------------------------------`);
-  for(const it of s.items){
+  for(const it of (s.items||[])){
     lines.push(`${it.qty} x ${it.name} = ${money(it.qty*it.price)}`);
   }
   lines.push(`--------------------------------`);
   lines.push(`TOTAL: *${money(s.total)}*`);
   lines.push(`Gracias por tu compra 💗`);
-  return lines.join("\n");
+  return lines.join("\\n");
 }
 
 function updateReceiptPreview(){
   const s = state.lastReceipt || makeLiveReceipt();
-  // Apply settings to receipt box
   $("rShop").textContent = s.shop || state.settings.shopName || "Tienda de Ropa";
   $("rMeta").textContent = `Recibo • ${s.saleType || "MOSTRADOR"} • ${s.payMethod || "EFECTIVO"}`;
   $("rNo").textContent = "#" + (s.receiptNo || "------");
-  $("rDate").textContent = s.ts ? new Date(s.ts).toLocaleString() : new Date().toLocaleString();
+  $("rDate").textContent = new Date(s.ts || Date.now()).toLocaleString();
 
   const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
   $("rClient").textContent = client;
@@ -1184,21 +1297,6 @@ function updateReceiptPreview(){
   $("rTotal").textContent = money(s.total || cartTotal());
 }
 
-function makeLiveReceipt(){
-  const saleType = $("saleType").value;
-  const payMethod = $("payMethod").value;
-  const c = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
-  return {
-    ts: Date.now(),
-    receiptNo: state.lastReceipt?.receiptNo || "------",
-    shop: state.settings.shopName,
-    saleType, payMethod,
-    client: c ? {phone:c.phone, names:c.names, last:c.last, addr:c.addr} : null,
-    items: state.cart.map(x=>({...x})),
-    total: cartTotal()
-  };
-}
-
 async function copyReceipt(){
   const s = state.lastReceipt || makeLiveReceipt();
   const text = saleToReceiptText(s);
@@ -1206,7 +1304,7 @@ async function copyReceipt(){
     await navigator.clipboard.writeText(text);
     alert("Recibo copiado. Pégalo en WhatsApp.");
   }catch{
-    alert("No se pudo copiar automáticamente. (Tu navegador lo bloqueó).");
+    alert("No se pudo copiar automáticamente. Intenta copiar manualmente desde WhatsApp.");
   }
 }
 
@@ -1217,9 +1315,8 @@ function openWhatsApp(){
   window.open(url, "_blank");
 }
 
-async function downloadReceiptPNG(){
-  // Render receiptBox to canvas (simple draw) sin librerías externas
-  // Hacemos un screenshot básico con canvas via SVG foreignObject (funciona en la mayoría de Chromium)
+/* PNG without external libs (works in Chromium; fallback alert if blocked) */
+function downloadReceiptPNG(){
   const node = $("receiptBox");
   const w = node.offsetWidth;
   const h = node.offsetHeight;
@@ -1267,12 +1364,118 @@ async function downloadReceiptPNG(){
   };
   img.onerror = ()=>{
     URL.revokeObjectURL(url);
-    alert("Tu navegador no pudo generar PNG. Usa 'Copiar texto' para WhatsApp.");
+    alert("Tu navegador bloqueó el PNG. Usa PDF o Copiar texto.");
   };
   img.src = url;
 }
 
-// ---------- Backup / Restore ----------
+/* PDF: build HTML without embedding <\/script> inside template strings */
+function receiptToPrintableHTML(s){
+  const d = new Date(s.ts || Date.now()).toLocaleString();
+  const clientName = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
+  const phone = s.client?.phone || "—";
+  const addr  = s.client?.addr  || "—";
+
+  const rows = (s.items||[]).map(it=>{
+    const line = (it.qty||0) * (it.price||0);
+    return `
+      <tr>
+        <td style="text-align:center">${it.qty}</td>
+        <td>${escapeHtml(it.name)}</td>
+        <td style="text-align:right">${money(it.price)}</td>
+        <td style="text-align:right">${money(line)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+  <!doctype html>
+  <html lang="es">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Recibo ${escapeHtml(s.receiptNo || "")}</title>
+    <style>
+      body{ font-family: Arial, sans-serif; margin: 20px; color:#111; }
+      .box{ max-width: 820px; margin: 0 auto; border:1px solid #ddd; border-radius:14px; padding:16px; }
+      h1{ margin:0; font-size:18px; }
+      .meta{ margin-top:4px; color:#444; font-size:12px; font-weight:700; }
+      .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px; }
+      .card{ border:1px solid #eee; border-radius:12px; padding:12px; }
+      .label{ color:#666; font-size:12px; font-weight:700; }
+      .val{ font-size:13px; font-weight:800; margin-top:3px; }
+      table{ width:100%; border-collapse:collapse; margin-top:14px; }
+      th,td{ border-bottom:1px solid #eee; padding:8px; font-size:13px; }
+      th{ background:#fafafa; text-align:left; }
+      .totalRow{ display:flex; justify-content:space-between; margin-top:12px; font-weight:900; font-size:14px; }
+      .foot{ margin-top:12px; color:#444; font-size:12px; font-weight:700; }
+      @media print{
+        body{ margin:0; }
+        .box{ border:none; border-radius:0; }
+      }
+    </style>
+  </head>
+  <body onload="setTimeout(function(){window.print();},250)">
+    <div class="box">
+      <h1>${escapeHtml(s.shop || "Tienda de Ropa")} — Recibo #${escapeHtml(s.receiptNo || "")}</h1>
+      <div class="meta">${escapeHtml(d)} • Tipo: ${escapeHtml(s.saleType || "MOSTRADOR")} • Pago: ${escapeHtml(s.payMethod || "EFECTIVO")}</div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="label">Cliente</div>
+          <div class="val">${escapeHtml(clientName)}</div>
+          <div class="label" style="margin-top:10px">Teléfono</div>
+          <div class="val">${escapeHtml(phone)}</div>
+        </div>
+        <div class="card">
+          <div class="label">Dirección</div>
+          <div class="val">${escapeHtml(addr)}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:70px;text-align:center">Cant</th>
+            <th>Producto</th>
+            <th style="width:120px;text-align:right">Precio</th>
+            <th style="width:120px;text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="4">Sin items</td></tr>`}
+        </tbody>
+      </table>
+
+      <div class="totalRow">
+        <div>TOTAL</div>
+        <div>${money(s.total || 0)}</div>
+      </div>
+
+      <div class="foot">Gracias por tu compra 💗</div>
+    </div>
+  </body>
+  </html>
+  `;
+}
+
+function generatePDF(){
+  const s = state.lastReceipt || makeLiveReceipt();
+
+  if(s.saleType === "ENVIO"){
+    const ok = s.client && s.client.phone && s.client.names && s.client.last && s.client.addr;
+    if(!ok) return alert("Para ENVÍO debes tener cliente completo antes de generar el PDF.");
+  }
+
+  const html = receiptToPrintableHTML(s);
+  const w = window.open("", "_blank");
+  if(!w) return alert("Tu navegador bloqueó la ventana emergente. Permite popups para generar PDF.");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+// ---------- Backup / Restore / Settings / KPIs ----------
 async function exportJSON(){
   const clients = await idbAll("clients");
   const products= await idbAll("products");
@@ -1287,7 +1490,7 @@ async function exportJSON(){
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "pos_ropa_backup.json";
+  a.download = "pos_boutique_backup.json";
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
@@ -1295,10 +1498,9 @@ async function exportJSON(){
 async function importJSON(file){
   const text = await file.text();
   const data = JSON.parse(text);
-
   if(!data || typeof data!=="object") throw new Error("JSON inválido.");
-  await idbClearAll();
 
+  await idbClearAll();
   if(data.clients) for(const c of data.clients) await idbPut("clients", c);
   if(data.products)for(const p of data.products) await idbPut("products", p);
   if(data.sales)   for(const s of data.sales) await idbPut("sales", s);
@@ -1316,7 +1518,6 @@ async function importJSON(file){
   alert("Backup importado.");
 }
 
-// ---------- KPIs / Settings ----------
 async function refreshKPIs(){
   const clients = await idbAll("clients");
   const products= await idbAll("products");
@@ -1333,9 +1534,7 @@ async function refreshKPIs(){
 
 async function loadSettings(){
   const meta = await idbGet("meta","settings");
-  if(meta?.value){
-    state.settings = meta.value;
-  }
+  if(meta?.value) state.settings = meta.value;
   $("sShopName").value = state.settings.shopName || "Tienda de Ropa";
   $("rShop").textContent = state.settings.shopName || "Tienda de Ropa";
 }
@@ -1443,11 +1642,11 @@ function wireEvents(){
 
   $("saleType").addEventListener("change", ()=>{
     if($("saleType").value==="ENVIO"){
-      // Force attention to phone
       $("cPhone").focus();
     }
     updateReceiptPreview();
   });
+
   $("payMethod").addEventListener("change", updateReceiptPreview);
 
   // Checkout
@@ -1455,12 +1654,7 @@ function wireEvents(){
 
   // Receipt buttons
   $("btnCopyReceipt").addEventListener("click", copyReceipt);
-
-  // ✅ PDF (nuevo)
-  if ($("btnPDF")) {
-    $("btnPDF").addEventListener("click", generatePDF);
-  }
-
+  $("btnPDF").addEventListener("click", generatePDF);
   $("btnDownloadReceipt").addEventListener("click", downloadReceiptPNG);
   $("btnWhatsApp").addEventListener("click", openWhatsApp);
 
@@ -1536,7 +1730,7 @@ function wireEvents(){
         state.lastReceipt = s;
         updateReceiptPreview();
         setView("pos");
-        alert("Recibo cargado en vista POS. Puedes copiar/WhatsApp/PNG.");
+        alert("Recibo cargado en vista POS. Puedes copiar/WhatsApp/PNG/PDF.");
       }
     }
     if(del){
@@ -1579,9 +1773,7 @@ function wireEvents(){
   // Live updates on receipt when typing client fields
   ["cPhone","cNames","cLast","cAddr"].forEach(id=>{
     $(id).addEventListener("input", ()=>{
-      // Do not auto-save; only preview
       if($("saleType").value==="ENVIO"){
-        // preview uses selectedClient; we can preview with typed values:
         const phone = $("cPhone").value.trim();
         const names = $("cNames").value.trim();
         const last  = $("cLast").value.trim();
@@ -1602,7 +1794,6 @@ function wireEvents(){
   });
 }
 
-
 // ---------- Init ----------
 (async function init(){
   db = await openDB();
@@ -1613,7 +1804,6 @@ function wireEvents(){
   wireEvents();
   setView("pos");
 
-  // Initialize receipt number display
   const meta = await idbGet("meta","receiptNo");
   const n = meta?.value ? (meta.value-1) : 1;
   $("rNo").textContent = "#"+pad(Math.max(1,n),6);
