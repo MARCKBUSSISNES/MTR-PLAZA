@@ -1,0 +1,1653 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>POS Ropa — Offline (Clientes + Ventas + Códigos)</title>
+  <style>
+    :root{
+      --bg:#fff6fb;
+      --panel:#ffffff;
+      --card:#ffffff;
+      --text:#2b2230;
+      --muted:#7a6b78;
+      --accent:#ff4fb7;
+      --accent2:#a855f7;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --border:rgba(35,20,35,.10);
+      --shadow:0 10px 30px rgba(17, 10, 20, .10);
+      --radius:18px;
+      --radius2:14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background: radial-gradient(1200px 700px at 20% 10%, #ffe4f3 0%, transparent 55%),
+                  radial-gradient(900px 600px at 80% 0%, #f3e8ff 0%, transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    .app{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px;
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:16px;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position: sticky;
+      top: 14px;
+      align-self: start;
+      height: calc(100vh - 28px);
+      background: linear-gradient(180deg, #ffffff 0%, #fff7fc 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      overflow:auto;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 10px 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .brand h1{
+      font-size: 16px;
+      margin:0;
+      line-height:1.15;
+      letter-spacing:.2px;
+    }
+    .brand small{display:block;color:var(--muted); font-weight:600; margin-top:2px}
+    .hamburger{
+      width:40px;height:40px;border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow: 0 6px 18px rgba(17,10,20,.06);
+    }
+    .hamburger:hover{transform: translateY(-1px)}
+    .hamburger:active{transform: translateY(0)}
+    .burger{
+      width:18px;height:12px; position:relative;
+    }
+    .burger span{
+      position:absolute; left:0; right:0;
+      height:2px; border-radius:999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .burger span:nth-child(1){top:0}
+    .burger span:nth-child(2){top:5px}
+    .burger span:nth-child(3){bottom:0}
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:12px;
+    }
+    .nav button{
+      width:100%;
+      padding:12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      box-shadow: 0 6px 18px rgba(17,10,20,.05);
+    }
+    .nav button .tag{
+      font-weight:900;
+      font-size:12px;
+      padding: 4px 10px;
+      border-radius:999px;
+      background: linear-gradient(90deg, rgba(255,79,183,.15), rgba(168,85,247,.15));
+      color: #7b2fb4;
+      border:1px solid rgba(168,85,247,.18);
+    }
+    .nav button.active{
+      border-color: rgba(255,79,183,.45);
+      box-shadow: 0 10px 26px rgba(255,79,183,.18);
+      background: linear-gradient(180deg, #fff 0%, #fff2fa 100%);
+    }
+
+    .sidecard{
+      margin-top:14px;
+      padding:12px;
+      border-radius: var(--radius);
+      border:1px dashed rgba(255,79,183,.35);
+      background: rgba(255,255,255,.85);
+    }
+    .sidecard .row{
+      display:flex; justify-content:space-between; gap:10px; margin:8px 0;
+      color:var(--muted); font-weight:700;
+    }
+    .sidecard .row b{color:var(--text)}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:900;
+      color:#8a2be2;
+      background: rgba(168,85,247,.12);
+      border:1px solid rgba(168,85,247,.25);
+      padding: 6px 10px;
+      border-radius:999px;
+    }
+
+    /* Main */
+    .main{
+      min-height: calc(100vh - 36px);
+      background: rgba(255,255,255,.60);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      overflow:hidden;
+    }
+
+    .topbar{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 6px 6px 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .title h2{margin:0;font-size:18px}
+    .title p{margin:0;color:var(--muted);font-weight:700;font-size:13px}
+
+    .actions{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      padding: 11px 14px;
+      border-radius: 14px;
+      background:#fff;
+      border:1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(17,10,20,.06);
+      color:var(--text);
+    }
+    .btn.primary{
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color:white;
+      border:none;
+      box-shadow: 0 12px 28px rgba(255,79,183,.28);
+    }
+    .btn.ok{
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      color:white;border:none;
+      box-shadow: 0 12px 28px rgba(34,197,94,.22);
+    }
+    .btn.danger{
+      background: linear-gradient(90deg, #ef4444, #b91c1c);
+      color:white;border:none;
+      box-shadow: 0 12px 28px rgba(239,68,68,.22);
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.small{padding:9px 12px; border-radius:12px; font-weight:900}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .card{
+      background: rgba(255,255,255,.90);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 26px rgba(17,10,20,.06);
+      padding: 14px;
+    }
+    .card h3{margin:0 0 10px 0; font-size:15px}
+    .muted{color:var(--muted); font-weight:700; font-size:13px}
+
+    .form{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .field input, .field select, .field textarea{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background:#fff;
+      outline:none;
+      font-weight:800;
+      color:var(--text);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus{
+      border-color: rgba(255,79,183,.45);
+      box-shadow: 0 0 0 4px rgba(255,79,183,.12);
+    }
+    .field.full{grid-column:1 / -1}
+
+    .rowflex{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .rowflex .grow{flex:1}
+
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--border);
+    }
+    .table th, .table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      font-weight:800;
+      font-size:13px;
+    }
+    .table th{background: rgba(255,79,183,.08); color:#6b1f5b}
+    .table td small{color:var(--muted); font-weight:800}
+    .table tr:last-child td{border-bottom:none}
+
+    .totals{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpi{
+      padding:12px;
+      border-radius: var(--radius2);
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+    }
+    .kpi .label{color:var(--muted); font-weight:900; font-size:12px}
+    .kpi .value{font-size:18px; font-weight:1000; margin-top:4px}
+    .kpi .value span{font-size:12px; color:var(--muted); font-weight:900}
+
+    .hide{display:none !important;}
+
+    /* Receipt */
+    .receiptWrap{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .receipt{
+      width: 360px;
+      background: #ffffff;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.10);
+    }
+    .receipt .logo{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding-bottom:10px;
+      border-bottom:1px dashed rgba(0,0,0,.12);
+      margin-bottom:10px;
+    }
+    .receipt .logo b{
+      font-size:14px;
+      letter-spacing:.3px;
+    }
+    .receipt .logo small{display:block;color:#666;font-weight:800}
+    .receipt .line{display:flex; justify-content:space-between; gap:10px; font-weight:900; font-size:12px; margin:6px 0}
+    .receipt .hr{height:1px;background:rgba(0,0,0,.08); margin:10px 0}
+    .receipt .big{
+      font-size:16px;
+      font-weight:1000;
+      display:flex; justify-content:space-between;
+      margin-top:10px;
+    }
+    .receipt .foot{margin-top:10px; font-size:11px; color:#666; font-weight:800}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .app{grid-template-columns: 1fr;}
+      .sidebar{position:relative; height:auto;}
+      .grid{grid-template-columns: 1fr;}
+      .receipt{width:100%;}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div>
+          <h1>POS Ropa <small>Offline • Cliente + Ventas + Recibos</small></h1>
+        </div>
+        <button class="hamburger" id="btnToggle">
+          <div class="burger"><span></span><span></span><span></span></div>
+        </button>
+      </div>
+
+      <div class="nav" id="nav">
+        <button class="active" data-view="pos"><span>🧾 Cobro (POS)</span><span class="tag">VENTA</span></button>
+        <button data-view="clients"><span>👩‍💼 Clientes</span><span class="tag">DB</span></button>
+        <button data-view="reports"><span>📊 Reportes</span><span class="tag">D/W/M</span></button>
+        <button data-view="products"><span>🧷 Productos</span><span class="tag">SKU</span></button>
+        <button data-view="settings"><span>⚙️ Ajustes</span><span class="tag">LOCAL</span></button>
+      </div>
+
+      <div class="sidecard">
+        <div class="pill">💗 Estilo femenino</div>
+        <div class="row"><span>Clientes</span><b id="kClients">0</b></div>
+        <div class="row"><span>Productos</span><b id="kProducts">0</b></div>
+        <div class="row"><span>Ventas (hoy)</span><b id="kSalesToday">0</b></div>
+        <div class="row"><span>Total (hoy)</span><b id="kTotalToday">Q0.00</b></div>
+        <div class="muted" style="margin-top:10px">
+          Consejo: usa <b>Escanear</b> y luego pasa los productos con el lector.
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title">
+          <h2 id="viewTitle">Cobro (POS)</h2>
+          <p id="viewSub">Escanea productos, selecciona pago y genera comprobante para WhatsApp.</p>
+        </div>
+        <div class="actions">
+          <button class="btn small" id="btnBackup">Exportar JSON</button>
+          <button class="btn small" id="btnRestore">Importar JSON</button>
+          <button class="btn danger small" id="btnWipe">Borrar Todo</button>
+        </div>
+      </div>
+
+      <!-- POS VIEW -->
+      <section id="view-pos">
+        <div class="grid">
+          <div class="card">
+            <h3>🧾 Venta</h3>
+
+            <div class="form" style="margin-bottom:10px">
+              <div class="field full">
+                <label>Escanear código de barras (SKU / Código)</label>
+                <div class="rowflex">
+                  <input id="scanInput" class="grow" inputmode="numeric" placeholder="Ej: 7501234567890 (Enter para agregar)" />
+                  <button class="btn primary" id="btnScan">Escanear</button>
+                </div>
+                <div class="muted">Tip: tu lector escribe el código aquí y presiona Enter.</div>
+              </div>
+
+              <div class="field">
+                <label>Cantidad</label>
+                <input id="qtyInput" type="number" min="1" value="1"/>
+              </div>
+              <div class="field">
+                <label>Buscar producto (por nombre)</label>
+                <input id="productSearch" placeholder="Ej: blusa, jeans..." />
+              </div>
+
+              <div class="field full">
+                <label>Productos encontrados</label>
+                <div class="rowflex">
+                  <select id="productPicker" class="grow"></select>
+                  <button class="btn" id="btnAddPicked">Agregar</button>
+                </div>
+              </div>
+            </div>
+
+            <table class="table" id="cartTable">
+              <thead>
+                <tr>
+                  <th style="width:70px">Cant</th>
+                  <th>Producto</th>
+                  <th style="width:110px">Precio</th>
+                  <th style="width:110px">Total</th>
+                  <th style="width:85px">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="cartBody"></tbody>
+            </table>
+
+            <div class="totals">
+              <div class="kpi">
+                <div class="label">Subtotal</div>
+                <div class="value" id="subTotal">Q0.00</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Total</div>
+                <div class="value" id="grandTotal">Q0.00 <span>(Q)</span></div>
+              </div>
+            </div>
+
+            <div class="rowflex" style="margin-top:12px">
+              <button class="btn" id="btnClearCart">Limpiar</button>
+              <button class="btn ok" id="btnCheckout">Cobrar</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px">
+              *Si eliges <b>Envío</b>, el sistema te obligará a ingresar/buscar cliente por teléfono.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>💳 Pago + Cliente</h3>
+
+            <div class="form">
+              <div class="field">
+                <label>Forma de pago</label>
+                <select id="payMethod">
+                  <option value="EFECTIVO">EFECTIVO</option>
+                  <option value="TARJETA">TARJETA</option>
+                  <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Tipo de venta</label>
+                <select id="saleType">
+                  <option value="MOSTRADOR">MOSTRADOR</option>
+                  <option value="ENVIO">ENVÍO</option>
+                </select>
+              </div>
+
+              <div class="field full">
+                <label>Teléfono (para buscar/crear cliente)</label>
+                <div class="rowflex">
+                  <input id="cPhone" class="grow" placeholder="Ej: 5555-5555" />
+                  <button class="btn" id="btnFindClient">Buscar</button>
+                </div>
+                <div class="muted">En <b>ENVÍO</b> es obligatorio tener cliente.</div>
+              </div>
+
+              <div class="field">
+                <label>Nombres</label>
+                <input id="cNames" placeholder="Ej: Karina"/>
+              </div>
+              <div class="field">
+                <label>Apellidos</label>
+                <input id="cLast" placeholder="Ej: López"/>
+              </div>
+
+              <div class="field full">
+                <label>Dirección</label>
+                <textarea id="cAddr" rows="3" placeholder="Ej: Col. X, casa #, zona..., referencias..."></textarea>
+              </div>
+
+              <div class="field full">
+                <div class="rowflex">
+                  <button class="btn primary" id="btnSaveClient">Guardar cliente</button>
+                  <button class="btn" id="btnUseWalkIn">Venta sin cliente</button>
+                </div>
+                <div class="muted">“Venta sin cliente” solo aplica para MOSTRADOR.</div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h3>🧾 Comprobante</h3>
+              <div class="rowflex">
+                <button class="btn" id="btnCopyReceipt">Copiar texto</button>
+                <button class="btn" id="btnDownloadReceipt">Descargar PNG</button>
+                <button class="btn primary" id="btnWhatsApp">WhatsApp</button>
+              </div>
+              <div class="muted" style="margin-top:10px">
+                WhatsApp: abre chat con el texto listo. En PC puede abrir WhatsApp Web.
+              </div>
+            </div>
+
+            <div class="receiptWrap" style="margin-top:12px">
+              <div class="receipt" id="receiptBox">
+                <div class="logo">
+                  <div>
+                    <b id="rShop">Tienda de Ropa</b>
+                    <small id="rMeta">Recibo • Offline</small>
+                  </div>
+                  <div style="text-align:right">
+                    <b id="rNo">#000001</b>
+                    <small id="rDate">—</small>
+                  </div>
+                </div>
+
+                <div class="line"><span>Cliente</span><span id="rClient">MOSTRADOR</span></div>
+                <div class="line"><span>Teléfono</span><span id="rPhone">—</span></div>
+                <div class="line"><span>Dirección</span><span id="rAddr">—</span></div>
+                <div class="hr"></div>
+
+                <div id="rItems"></div>
+
+                <div class="hr"></div>
+                <div class="line"><span>Pago</span><span id="rPay">EFECTIVO</span></div>
+                <div class="big"><span>Total</span><span id="rTotal">Q0.00</span></div>
+                <div class="foot">¡Gracias por tu compra! 💗</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- CLIENTS VIEW -->
+      <section id="view-clients" class="hide">
+        <div class="card">
+          <h3>👩‍💼 Clientes (base de datos local)</h3>
+          <div class="rowflex">
+            <input id="clientSearch" class="grow" placeholder="Buscar por teléfono o nombre..."/>
+            <button class="btn" id="btnClientRefresh">Refrescar</button>
+          </div>
+          <div class="muted" style="margin-top:8px">Teléfono es el identificador. Se guarda en tu navegador (IndexedDB).</div>
+
+          <div style="margin-top:12px; overflow:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Teléfono</th>
+                  <th>Nombre</th>
+                  <th>Dirección</th>
+                  <th style="width:120px">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="clientsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- REPORTS VIEW -->
+      <section id="view-reports" class="hide">
+        <div class="card">
+          <h3>📊 Reportes (Diario / Semanal / Mensual)</h3>
+
+          <div class="rowflex">
+            <button class="btn" id="btnRepDaily">Hoy</button>
+            <button class="btn" id="btnRepWeekly">Semana</button>
+            <button class="btn" id="btnRepMonthly">Mes</button>
+          </div>
+
+          <div class="totals" style="margin-top:12px">
+            <div class="kpi">
+              <div class="label">Ventas</div>
+              <div class="value" id="repCount">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Total</div>
+              <div class="value" id="repTotal">Q0.00</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; overflow:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Pago</th>
+                  <th>Total</th>
+                  <th style="width:140px">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="salesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUCTS VIEW -->
+      <section id="view-products" class="hide">
+        <div class="grid">
+          <div class="card">
+            <h3>🧷 Productos (SKU / Código)</h3>
+            <div class="form">
+              <div class="field">
+                <label>Código (SKU / Barras)</label>
+                <input id="pCode" placeholder="Ej: 7501234567890"/>
+              </div>
+              <div class="field">
+                <label>Nombre</label>
+                <input id="pName" placeholder="Ej: Blusa rosa"/>
+              </div>
+              <div class="field">
+                <label>Precio (Q)</label>
+                <input id="pPrice" type="number" min="0" step="0.01" placeholder="Ej: 125"/>
+              </div>
+              <div class="field">
+                <label>Stock</label>
+                <input id="pStock" type="number" min="0" step="1" placeholder="Ej: 10"/>
+              </div>
+              <div class="field full">
+                <div class="rowflex">
+                  <button class="btn primary" id="btnSaveProduct">Guardar producto</button>
+                  <button class="btn" id="btnSeedDemo">Cargar demo</button>
+                </div>
+                <div class="muted">Puedes agregar manual o usar una lista demo para probar el lector.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>📦 Lista de productos</h3>
+            <div class="rowflex">
+              <input id="prodSearch" class="grow" placeholder="Buscar por código o nombre..."/>
+              <button class="btn" id="btnProdRefresh">Refrescar</button>
+            </div>
+
+            <div style="margin-top:12px; overflow:auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th style="width:120px">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="view-settings" class="hide">
+        <div class="card">
+          <h3>⚙️ Ajustes</h3>
+
+          <div class="form">
+            <div class="field full">
+              <label>Nombre de la tienda (sale en el recibo)</label>
+              <input id="sShopName" placeholder="Ej: Boutique Karina"/>
+            </div>
+            <div class="field full">
+              <button class="btn primary" id="btnSaveSettings">Guardar</button>
+            </div>
+          </div>
+
+          <div class="muted" style="margin-top:10px">
+            Nota: todo se guarda en tu navegador. Si cambias de PC/navegador, exporta e importa el JSON.
+          </div>
+        </div>
+      </section>
+
+      <!-- Hidden file input for restore -->
+      <input type="file" id="restoreFile" accept="application/json" class="hide"/>
+      <canvas id="cnv" class="hide"></canvas>
+    </main>
+  </div>
+
+<script>
+/* ============================================================
+   POS ROPA OFFLINE (IndexedDB)
+   - Clientes por teléfono (clave)
+   - Productos por código
+   - Ventas con items, pago, tipo, cliente, timestamp
+   - Recibos: copiar texto / WhatsApp / PNG
+============================================================ */
+
+const DB_NAME = "pos_ropa_offline_v1";
+const DB_VER = 1;
+let db;
+
+const state = {
+  view: "pos",
+  cart: [],
+  selectedClient: null, // {phone,names,last,addr}
+  allowWalkIn: true,
+  lastReceipt: null,
+  settings: { shopName: "Tienda de Ropa" }
+};
+
+const $ = (id)=>document.getElementById(id);
+const money = (n)=> "Q" + (Number(n||0)).toFixed(2);
+
+// ---------- IndexedDB ----------
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains("clients")){
+        const s = db.createObjectStore("clients", { keyPath:"phone" });
+        s.createIndex("name", "nameKey", { unique:false });
+      }
+      if(!db.objectStoreNames.contains("products")){
+        const s = db.createObjectStore("products", { keyPath:"code" });
+        s.createIndex("name", "nameKey", { unique:false });
+      }
+      if(!db.objectStoreNames.contains("sales")){
+        const s = db.createObjectStore("sales", { keyPath:"id" });
+        s.createIndex("ts", "ts", { unique:false });
+      }
+      if(!db.objectStoreNames.contains("meta")){
+        db.createObjectStore("meta", { keyPath:"key" });
+      }
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+function tx(store, mode="readonly"){
+  return db.transaction(store, mode).objectStore(store);
+}
+function idbGet(store, key){
+  return new Promise((res,rej)=>{
+    const r = tx(store).get(key);
+    r.onsuccess=()=>res(r.result||null);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbPut(store, val){
+  return new Promise((res,rej)=>{
+    const r = tx(store,"readwrite").put(val);
+    r.onsuccess=()=>res(true);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbDel(store, key){
+  return new Promise((res,rej)=>{
+    const r = tx(store,"readwrite").delete(key);
+    r.onsuccess=()=>res(true);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbAll(store){
+  return new Promise((res,rej)=>{
+    const r = tx(store).getAll();
+    r.onsuccess=()=>res(r.result||[]);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbClearAll(){
+  return Promise.all([
+    new Promise((res,rej)=>{ const r=db.transaction("clients","readwrite").objectStore("clients").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
+    new Promise((res,rej)=>{ const r=db.transaction("products","readwrite").objectStore("products").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
+    new Promise((res,rej)=>{ const r=db.transaction("sales","readwrite").objectStore("sales").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
+    new Promise((res,rej)=>{ const r=db.transaction("meta","readwrite").objectStore("meta").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
+  ]);
+}
+
+// ---------- Helpers ----------
+function todayKey(ts=Date.now()){
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function weekKey(ts=Date.now()){
+  // ISO week-ish: y-w##
+  const d = new Date(ts);
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+  const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1)/7);
+  return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`;
+}
+function monthKey(ts=Date.now()){
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  return `${y}-${m}`;
+}
+function escapeHtml(s){
+  return String(s||"")
+    .replaceAll("&","&amp;").replaceAll("<","&lt;")
+    .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function normKey(s){
+  return String(s||"").trim().toLowerCase().replace(/\s+/g," ");
+}
+function pad(n,len=6){ return String(n).padStart(len,"0"); }
+
+// ---------- UI Nav ----------
+const views = {
+  pos: {title:"Cobro (POS)", sub:"Escanea productos, selecciona pago y genera comprobante para WhatsApp."},
+  clients: {title:"Clientes", sub:"Busca por teléfono, edita y usa para envíos."},
+  reports: {title:"Reportes", sub:"Diario / Semanal / Mensual con historial de ventas."},
+  products: {title:"Productos", sub:"Agrega productos con código, nombre, precio y stock."},
+  settings: {title:"Ajustes", sub:"Nombre de tienda y respaldos (exportar/importar)."}
+};
+
+function setView(v){
+  state.view = v;
+  $("viewTitle").textContent = views[v].title;
+  $("viewSub").textContent = views[v].sub;
+
+  for(const k of Object.keys(views)){
+    $("view-"+k).classList.toggle("hide", k!==v);
+  }
+  [...document.querySelectorAll(".nav button")].forEach(b=>{
+    b.classList.toggle("active", b.dataset.view===v);
+  });
+
+  if(v==="clients") renderClients();
+  if(v==="products") { renderProducts(); refreshProductPicker(); }
+  if(v==="reports") renderReport("daily");
+}
+
+// ---------- POS Cart ----------
+function renderCart(){
+  const body = $("cartBody");
+  body.innerHTML = "";
+
+  let subtotal = 0;
+  for(const item of state.cart){
+    const line = item.qty * item.price;
+    subtotal += line;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.qty}</td>
+      <td>${escapeHtml(item.name)}<br><small>${escapeHtml(item.code)}</small></td>
+      <td>${money(item.price)}</td>
+      <td>${money(line)}</td>
+      <td>
+        <button class="btn small" data-act="minus" data-code="${escapeHtml(item.code)}">-</button>
+        <button class="btn small" data-act="plus" data-code="${escapeHtml(item.code)}">+</button>
+        <button class="btn danger small" data-act="del" data-code="${escapeHtml(item.code)}">X</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  }
+
+  $("subTotal").textContent = money(subtotal);
+  $("grandTotal").textContent = money(subtotal);
+  updateReceiptPreview();
+}
+
+function cartAdd(product, qty=1){
+  qty = Number(qty||1);
+  if(qty<1) qty=1;
+  const found = state.cart.find(x=>x.code===product.code);
+  if(found) found.qty += qty;
+  else state.cart.push({code:product.code, name:product.name, price:Number(product.price), qty});
+  renderCart();
+}
+
+function cartInc(code, delta){
+  const it = state.cart.find(x=>x.code===code);
+  if(!it) return;
+  it.qty += delta;
+  if(it.qty<=0) state.cart = state.cart.filter(x=>x.code!==code);
+  renderCart();
+}
+
+function cartClear(){
+  state.cart = [];
+  renderCart();
+}
+
+function cartTotal(){
+  return state.cart.reduce((a,x)=>a + x.qty*x.price, 0);
+}
+
+// ---------- Clients ----------
+async function findClientByPhone(phone){
+  phone = String(phone||"").trim();
+  if(!phone) return null;
+  return await idbGet("clients", phone);
+}
+
+async function saveClientFromForm(){
+  const phone = $("cPhone").value.trim();
+  const names = $("cNames").value.trim();
+  const last  = $("cLast").value.trim();
+  const addr  = $("cAddr").value.trim();
+
+  if(!phone) return alert("Ingrese teléfono.");
+  if(!names || !last || !addr) return alert("Complete Nombres, Apellidos y Dirección.");
+
+  const client = {
+    phone,
+    names, last, addr,
+    nameKey: normKey(names+" "+last),
+    updatedAt: Date.now()
+  };
+  await idbPut("clients", client);
+  state.selectedClient = client;
+  alert("Cliente guardado.");
+  await refreshKPIs();
+  if(state.view==="clients") renderClients();
+  updateReceiptPreview();
+}
+
+async function renderClients(){
+  const q = normKey($("clientSearch").value);
+  const all = await idbAll("clients");
+  const list = q ? all.filter(c => normKey(c.phone).includes(q) || c.nameKey.includes(q) || normKey(c.addr).includes(q)) : all;
+
+  const tb = $("clientsBody");
+  tb.innerHTML = "";
+  for(const c of list.sort((a,b)=> (a.nameKey||"").localeCompare(b.nameKey||""))){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(c.phone)}</td>
+      <td>${escapeHtml(c.names)} ${escapeHtml(c.last)}</td>
+      <td><small>${escapeHtml(c.addr)}</small></td>
+      <td>
+        <button class="btn small" data-useclient="${escapeHtml(c.phone)}">Usar</button>
+        <button class="btn danger small" data-delclient="${escapeHtml(c.phone)}">Borrar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+}
+
+// ---------- Products ----------
+async function saveProductFromForm(){
+  const code = $("pCode").value.trim();
+  const name = $("pName").value.trim();
+  const price = Number($("pPrice").value);
+  const stock = Number($("pStock").value);
+
+  if(!code) return alert("Ingrese Código (SKU/barras).");
+  if(!name) return alert("Ingrese Nombre.");
+  if(isNaN(price) || price<0) return alert("Precio inválido.");
+  if(isNaN(stock) || stock<0) return alert("Stock inválido.");
+
+  const product = {
+    code, name,
+    price, stock,
+    nameKey: normKey(name),
+    updatedAt: Date.now()
+  };
+  await idbPut("products", product);
+  alert("Producto guardado.");
+  $("pCode").value=""; $("pName").value=""; $("pPrice").value=""; $("pStock").value="";
+  await refreshKPIs();
+  renderProducts();
+  refreshProductPicker();
+}
+
+async function getProductByCode(code){
+  return await idbGet("products", code);
+}
+
+async function renderProducts(){
+  const q = normKey($("prodSearch").value);
+  const all = await idbAll("products");
+  const list = q ? all.filter(p => normKey(p.code).includes(q) || p.nameKey.includes(q)) : all;
+
+  const tb = $("productsBody");
+  tb.innerHTML = "";
+  for(const p of list.sort((a,b)=> (a.nameKey||"").localeCompare(b.nameKey||""))){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(p.code)}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${money(p.price)}</td>
+      <td>${Number(p.stock||0)}</td>
+      <td>
+        <button class="btn small" data-fillprod="${escapeHtml(p.code)}">Editar</button>
+        <button class="btn danger small" data-delprod="${escapeHtml(p.code)}">Borrar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+}
+
+async function refreshProductPicker(){
+  const q = normKey($("productSearch").value);
+  const all = await idbAll("products");
+  const list = q ? all.filter(p=>p.nameKey.includes(q) || normKey(p.code).includes(q)) : all;
+
+  const sel = $("productPicker");
+  sel.innerHTML = "";
+  if(list.length===0){
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No hay productos (agrega en Productos)";
+    sel.appendChild(opt);
+    return;
+  }
+  for(const p of list.slice(0,250)){
+    const opt = document.createElement("option");
+    opt.value = p.code;
+    opt.textContent = `${p.name} — ${p.code} — ${money(p.price)} — Stock:${p.stock}`;
+    sel.appendChild(opt);
+  }
+}
+
+async function seedDemo(){
+  const demo = [
+    {code:"1001", name:"Blusa Satinada Rosa", price:129, stock:20},
+    {code:"1002", name:"Vestido Floral", price:249, stock:12},
+    {code:"1003", name:"Jeans Skinny Azul", price:199, stock:18},
+    {code:"1004", name:"Falda Plisada", price:159, stock:10},
+    {code:"1005", name:"Chaqueta Denim", price:279, stock:8},
+  ];
+  for(const d of demo){
+    await idbPut("products", {...d, nameKey:normKey(d.name), updatedAt:Date.now()});
+  }
+  alert("Demo cargado.");
+  await refreshKPIs();
+  renderProducts();
+  refreshProductPicker();
+}
+
+// ---------- Sales / Checkout ----------
+async function nextReceiptNo(){
+  const meta = await idbGet("meta","receiptNo");
+  const n = meta?.value ? Number(meta.value) : 1;
+  await idbPut("meta",{key:"receiptNo", value:n+1});
+  return n;
+}
+
+function requireClientIfShipping(){
+  const type = $("saleType").value;
+  if(type==="ENVIO"){
+    const c = state.selectedClient;
+    if(!c || !c.phone || !c.names || !c.last || !c.addr){
+      return {ok:false, msg:"En ENVÍO es obligatorio seleccionar/crear un cliente con teléfono, nombre y dirección."};
+    }
+  }
+  return {ok:true};
+}
+
+async function checkout(){
+  if(state.cart.length===0) return alert("No hay productos en la venta.");
+  const clientRule = requireClientIfShipping();
+  if(!clientRule.ok) return alert(clientRule.msg);
+
+  const saleType = $("saleType").value;
+  const payMethod = $("payMethod").value;
+  const total = cartTotal();
+  const ts = Date.now();
+  const id = "S-" + ts + "-" + Math.random().toString(16).slice(2,8);
+  const receiptNo = await nextReceiptNo();
+
+  // Validate stock + deduct
+  for(const it of state.cart){
+    const p = await getProductByCode(it.code);
+    if(!p) return alert("Producto no existe: " + it.code);
+    if(Number(p.stock||0) < it.qty) return alert(`Stock insuficiente para "${p.name}". Stock:${p.stock} Cant:${it.qty}`);
+  }
+  for(const it of state.cart){
+    const p = await getProductByCode(it.code);
+    p.stock = Number(p.stock||0) - it.qty;
+    p.updatedAt = Date.now();
+    await idbPut("products", p);
+  }
+
+  const client = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
+
+  const sale = {
+    id, ts,
+    dateKey: todayKey(ts),
+    weekKey: weekKey(ts),
+    monthKey: monthKey(ts),
+    saleType, payMethod,
+    client: client ? { phone:client.phone, names:client.names, last:client.last, addr:client.addr } : null,
+    items: state.cart.map(x=>({...x})),
+    total: Number(total.toFixed(2)),
+    receiptNo: pad(receiptNo, 6),
+    shop: state.settings.shopName || "Tienda de Ropa"
+  };
+
+  await idbPut("sales", sale);
+  state.lastReceipt = sale;
+
+  cartClear();
+  await refreshKPIs();
+  refreshProductPicker();
+  updateReceiptPreview();
+  alert("Venta registrada. Recibo listo para WhatsApp.");
+}
+
+// ---------- Reports ----------
+async function renderReport(mode){
+  const all = await idbAll("sales");
+  const now = Date.now();
+  let list = [];
+
+  if(mode==="daily"){
+    const k = todayKey(now);
+    list = all.filter(s=>s.dateKey===k);
+  }else if(mode==="weekly"){
+    const k = weekKey(now);
+    list = all.filter(s=>s.weekKey===k);
+  }else{
+    const k = monthKey(now);
+    list = all.filter(s=>s.monthKey===k);
+  }
+
+  const total = list.reduce((a,s)=>a+Number(s.total||0),0);
+  $("repCount").textContent = list.length;
+  $("repTotal").textContent = money(total);
+
+  const tb = $("salesBody");
+  tb.innerHTML = "";
+  for(const s of list.sort((a,b)=>b.ts-a.ts)){
+    const d = new Date(s.ts);
+    const when = d.toLocaleString();
+    const c = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><small>${escapeHtml(when)}</small><br><small>#${escapeHtml(s.receiptNo||"")}</small></td>
+      <td>${escapeHtml(c)}<br><small>${escapeHtml(s.saleType||"")}</small></td>
+      <td>${escapeHtml(s.payMethod||"")}</td>
+      <td>${money(s.total)}</td>
+      <td>
+        <button class="btn small" data-viewsale="${escapeHtml(s.id)}">Ver</button>
+        <button class="btn danger small" data-delsale="${escapeHtml(s.id)}">Borrar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+}
+
+// ---------- Receipt ----------
+function saleToReceiptText(s){
+  if(!s) return "No hay recibo todavía.";
+  const d = new Date(s.ts).toLocaleString();
+  const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
+  const phone = s.client?.phone || "—";
+  const addr  = s.client?.addr || "—";
+  const lines = [];
+  lines.push(`🧾 *${s.shop}*`);
+  lines.push(`Recibo #${s.receiptNo}`);
+  lines.push(`Fecha: ${d}`);
+  lines.push(`Tipo: ${s.saleType} | Pago: ${s.payMethod}`);
+  lines.push(`Cliente: ${client}`);
+  lines.push(`Tel: ${phone}`);
+  lines.push(`Dir: ${addr}`);
+  lines.push(`--------------------------------`);
+  for(const it of s.items){
+    lines.push(`${it.qty} x ${it.name} = ${money(it.qty*it.price)}`);
+  }
+  lines.push(`--------------------------------`);
+  lines.push(`TOTAL: *${money(s.total)}*`);
+  lines.push(`Gracias por tu compra 💗`);
+  return lines.join("\n");
+}
+
+function updateReceiptPreview(){
+  const s = state.lastReceipt || makeLiveReceipt();
+  // Apply settings to receipt box
+  $("rShop").textContent = s.shop || state.settings.shopName || "Tienda de Ropa";
+  $("rMeta").textContent = `Recibo • ${s.saleType || "MOSTRADOR"} • ${s.payMethod || "EFECTIVO"}`;
+  $("rNo").textContent = "#" + (s.receiptNo || "------");
+  $("rDate").textContent = s.ts ? new Date(s.ts).toLocaleString() : new Date().toLocaleString();
+
+  const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
+  $("rClient").textContent = client;
+  $("rPhone").textContent = s.client?.phone || "—";
+  $("rAddr").textContent  = s.client?.addr || "—";
+  $("rPay").textContent   = s.payMethod || $("payMethod").value;
+
+  const itemsDiv = $("rItems");
+  itemsDiv.innerHTML = "";
+  for(const it of (s.items||[])){
+    const line = document.createElement("div");
+    line.className="line";
+    line.innerHTML = `<span>${it.qty} x ${escapeHtml(it.name)}</span><span>${money(it.qty*it.price)}</span>`;
+    itemsDiv.appendChild(line);
+  }
+  $("rTotal").textContent = money(s.total || cartTotal());
+}
+
+function makeLiveReceipt(){
+  const saleType = $("saleType").value;
+  const payMethod = $("payMethod").value;
+  const c = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
+  return {
+    ts: Date.now(),
+    receiptNo: state.lastReceipt?.receiptNo || "------",
+    shop: state.settings.shopName,
+    saleType, payMethod,
+    client: c ? {phone:c.phone, names:c.names, last:c.last, addr:c.addr} : null,
+    items: state.cart.map(x=>({...x})),
+    total: cartTotal()
+  };
+}
+
+async function copyReceipt(){
+  const s = state.lastReceipt || makeLiveReceipt();
+  const text = saleToReceiptText(s);
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Recibo copiado. Pégalo en WhatsApp.");
+  }catch{
+    alert("No se pudo copiar automáticamente. (Tu navegador lo bloqueó).");
+  }
+}
+
+function openWhatsApp(){
+  const s = state.lastReceipt || makeLiveReceipt();
+  const text = saleToReceiptText(s);
+  const url = "https://wa.me/?text=" + encodeURIComponent(text);
+  window.open(url, "_blank");
+}
+
+async function downloadReceiptPNG(){
+  // Render receiptBox to canvas (simple draw) sin librerías externas
+  // Hacemos un screenshot básico con canvas via SVG foreignObject (funciona en la mayoría de Chromium)
+  const node = $("receiptBox");
+  const w = node.offsetWidth;
+  const h = node.offsetHeight;
+
+  const clone = node.cloneNode(true);
+  clone.style.boxShadow="none";
+
+  const wrapper = document.createElement("div");
+  wrapper.style.width = w+"px";
+  wrapper.style.height = h+"px";
+  wrapper.style.background = "#fff";
+  wrapper.appendChild(clone);
+
+  const html = new XMLSerializer().serializeToString(wrapper);
+  const data = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+          ${html}
+        </div>
+      </foreignObject>
+    </svg>
+  `;
+  const svgBlob = new Blob([data], {type:"image/svg+xml;charset=utf-8"});
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = ()=>{
+    const cnv = $("cnv");
+    cnv.width = w*2;
+    cnv.height = h*2;
+    const ctx = cnv.getContext("2d");
+    ctx.scale(2,2);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+    ctx.drawImage(img, 0,0);
+    URL.revokeObjectURL(url);
+
+    cnv.toBlob((blob)=>{
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `recibo_${(state.lastReceipt?.receiptNo||"----")}.png`;
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    }, "image/png");
+  };
+  img.onerror = ()=>{
+    URL.revokeObjectURL(url);
+    alert("Tu navegador no pudo generar PNG. Usa 'Copiar texto' para WhatsApp.");
+  };
+  img.src = url;
+}
+
+// ---------- Backup / Restore ----------
+async function exportJSON(){
+  const clients = await idbAll("clients");
+  const products= await idbAll("products");
+  const sales   = await idbAll("sales");
+  const meta    = await idbAll("meta");
+
+  const data = {
+    exportedAt: new Date().toISOString(),
+    settings: state.settings,
+    clients, products, sales, meta
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "pos_ropa_backup.json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+
+async function importJSON(file){
+  const text = await file.text();
+  const data = JSON.parse(text);
+
+  if(!data || typeof data!=="object") throw new Error("JSON inválido.");
+  await idbClearAll();
+
+  if(data.clients) for(const c of data.clients) await idbPut("clients", c);
+  if(data.products)for(const p of data.products) await idbPut("products", p);
+  if(data.sales)   for(const s of data.sales) await idbPut("sales", s);
+  if(data.meta)    for(const m of data.meta) await idbPut("meta", m);
+
+  if(data.settings) state.settings = data.settings;
+
+  await loadSettings();
+  await refreshKPIs();
+  refreshProductPicker();
+  renderProducts();
+  renderClients();
+  renderReport("daily");
+  updateReceiptPreview();
+  alert("Backup importado.");
+}
+
+// ---------- KPIs / Settings ----------
+async function refreshKPIs(){
+  const clients = await idbAll("clients");
+  const products= await idbAll("products");
+  const sales   = await idbAll("sales");
+  const tKey = todayKey(Date.now());
+  const today = sales.filter(s=>s.dateKey===tKey);
+  const total = today.reduce((a,s)=>a+Number(s.total||0),0);
+
+  $("kClients").textContent = clients.length;
+  $("kProducts").textContent = products.length;
+  $("kSalesToday").textContent = today.length;
+  $("kTotalToday").textContent = money(total);
+}
+
+async function loadSettings(){
+  const meta = await idbGet("meta","settings");
+  if(meta?.value){
+    state.settings = meta.value;
+  }
+  $("sShopName").value = state.settings.shopName || "Tienda de Ropa";
+  $("rShop").textContent = state.settings.shopName || "Tienda de Ropa";
+}
+
+async function saveSettings(){
+  const shopName = $("sShopName").value.trim() || "Tienda de Ropa";
+  state.settings.shopName = shopName;
+  await idbPut("meta",{key:"settings", value: state.settings});
+  alert("Ajustes guardados.");
+  updateReceiptPreview();
+}
+
+// ---------- Events ----------
+function wireEvents(){
+  // Nav
+  $("nav").addEventListener("click",(e)=>{
+    const btn = e.target.closest("button[data-view]");
+    if(!btn) return;
+    setView(btn.dataset.view);
+  });
+
+  // Hamburger toggle (simple collapse on mobile)
+  $("btnToggle").addEventListener("click", ()=>{
+    $("nav").classList.toggle("hide");
+  });
+
+  // Scan focus
+  $("btnScan").addEventListener("click", ()=>{
+    $("scanInput").focus();
+    $("scanInput").select();
+  });
+
+  // Scan on Enter
+  $("scanInput").addEventListener("keydown", async (e)=>{
+    if(e.key==="Enter"){
+      e.preventDefault();
+      const code = $("scanInput").value.trim();
+      const qty = Number($("qtyInput").value||1);
+      if(!code) return;
+      const p = await getProductByCode(code);
+      if(!p) { alert("No existe producto con código: " + code); return; }
+      cartAdd(p, qty);
+      $("scanInput").value="";
+      $("qtyInput").value=1;
+      $("scanInput").focus();
+    }
+  });
+
+  // Search products for picker
+  $("productSearch").addEventListener("input", refreshProductPicker);
+  $("btnAddPicked").addEventListener("click", async ()=>{
+    const code = $("productPicker").value;
+    if(!code) return;
+    const p = await getProductByCode(code);
+    if(!p) return alert("Producto no existe.");
+    cartAdd(p, Number($("qtyInput").value||1));
+    $("qtyInput").value=1;
+    $("scanInput").focus();
+  });
+
+  // Cart actions
+  $("cartBody").addEventListener("click",(e)=>{
+    const b = e.target.closest("button[data-act]");
+    if(!b) return;
+    const code = b.dataset.code;
+    const act = b.dataset.act;
+    if(act==="minus") cartInc(code,-1);
+    if(act==="plus")  cartInc(code, 1);
+    if(act==="del")   { state.cart = state.cart.filter(x=>x.code!==code); renderCart(); }
+  });
+
+  $("btnClearCart").addEventListener("click", cartClear);
+
+  // Client find/save
+  $("btnFindClient").addEventListener("click", async ()=>{
+    const phone = $("cPhone").value.trim();
+    if(!phone) return alert("Ingrese teléfono.");
+    const c = await findClientByPhone(phone);
+    if(!c){
+      alert("No existe. Completa los datos y presiona Guardar.");
+      state.selectedClient = null;
+      updateReceiptPreview();
+      return;
+    }
+    state.selectedClient = c;
+    $("cNames").value = c.names || "";
+    $("cLast").value  = c.last || "";
+    $("cAddr").value  = c.addr || "";
+    alert("Cliente cargado.");
+    updateReceiptPreview();
+  });
+
+  $("btnSaveClient").addEventListener("click", saveClientFromForm);
+
+  $("btnUseWalkIn").addEventListener("click", ()=>{
+    if($("saleType").value==="ENVIO"){
+      alert("En ENVÍO no se permite venta sin cliente.");
+      return;
+    }
+    state.selectedClient = null;
+    $("cPhone").value=""; $("cNames").value=""; $("cLast").value=""; $("cAddr").value="";
+    alert("Listo: venta MOSTRADOR sin cliente.");
+    updateReceiptPreview();
+  });
+
+  $("saleType").addEventListener("change", ()=>{
+    if($("saleType").value==="ENVIO"){
+      // Force attention to phone
+      $("cPhone").focus();
+    }
+    updateReceiptPreview();
+  });
+  $("payMethod").addEventListener("change", updateReceiptPreview);
+
+  // Checkout
+  $("btnCheckout").addEventListener("click", checkout);
+
+  // Receipt buttons
+  $("btnCopyReceipt").addEventListener("click", copyReceipt);
+  $("btnDownloadReceipt").addEventListener("click", downloadReceiptPNG);
+  $("btnWhatsApp").addEventListener("click", openWhatsApp);
+
+  // Clients table actions
+  $("clientsBody").addEventListener("click", async (e)=>{
+    const use = e.target.closest("button[data-useclient]");
+    const del = e.target.closest("button[data-delclient]");
+    if(use){
+      const phone = use.dataset.useclient;
+      const c = await findClientByPhone(phone);
+      if(c){
+        state.selectedClient = c;
+        $("cPhone").value=c.phone; $("cNames").value=c.names; $("cLast").value=c.last; $("cAddr").value=c.addr;
+        setView("pos");
+        updateReceiptPreview();
+      }
+    }
+    if(del){
+      const phone = del.dataset.delclient;
+      if(confirm("¿Borrar cliente "+phone+"?")){
+        await idbDel("clients", phone);
+        await refreshKPIs();
+        renderClients();
+      }
+    }
+  });
+
+  $("clientSearch").addEventListener("input", renderClients);
+  $("btnClientRefresh").addEventListener("click", renderClients);
+
+  // Products actions
+  $("btnSaveProduct").addEventListener("click", saveProductFromForm);
+  $("btnSeedDemo").addEventListener("click", seedDemo);
+  $("prodSearch").addEventListener("input", renderProducts);
+  $("btnProdRefresh").addEventListener("click", ()=>{ renderProducts(); refreshProductPicker(); });
+
+  $("productsBody").addEventListener("click", async (e)=>{
+    const fill = e.target.closest("button[data-fillprod]");
+    const del  = e.target.closest("button[data-delprod]");
+    if(fill){
+      const code = fill.dataset.fillprod;
+      const p = await getProductByCode(code);
+      if(!p) return;
+      $("pCode").value = p.code;
+      $("pName").value = p.name;
+      $("pPrice").value= p.price;
+      $("pStock").value= p.stock;
+      $("pCode").focus();
+    }
+    if(del){
+      const code = del.dataset.delprod;
+      if(confirm("¿Borrar producto "+code+"?")){
+        await idbDel("products", code);
+        await refreshKPIs();
+        renderProducts();
+        refreshProductPicker();
+      }
+    }
+  });
+
+  // Reports actions
+  $("btnRepDaily").addEventListener("click", ()=>renderReport("daily"));
+  $("btnRepWeekly").addEventListener("click", ()=>renderReport("weekly"));
+  $("btnRepMonthly").addEventListener("click", ()=>renderReport("monthly"));
+
+  $("salesBody").addEventListener("click", async (e)=>{
+    const view = e.target.closest("button[data-viewsale]");
+    const del  = e.target.closest("button[data-delsale]");
+    if(view){
+      const id = view.dataset.viewsale;
+      const s = await idbGet("sales", id);
+      if(s){
+        state.lastReceipt = s;
+        updateReceiptPreview();
+        setView("pos");
+        alert("Recibo cargado en vista POS. Puedes copiar/WhatsApp/PNG.");
+      }
+    }
+    if(del){
+      const id = del.dataset.delsale;
+      if(confirm("¿Borrar venta?")){
+        await idbDel("sales", id);
+        await refreshKPIs();
+        renderReport("daily");
+      }
+    }
+  });
+
+  // Backup / restore / wipe
+  $("btnBackup").addEventListener("click", exportJSON);
+  $("btnRestore").addEventListener("click", ()=> $("restoreFile").click());
+  $("restoreFile").addEventListener("change", async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    try{ await importJSON(file); }
+    catch(err){ alert("Error importando: " + err.message); }
+    e.target.value="";
+  });
+
+  $("btnWipe").addEventListener("click", async ()=>{
+    if(confirm("¿Seguro? Esto borra clientes, productos, ventas y contadores.")){
+      await idbClearAll();
+      state.cart=[]; state.selectedClient=null; state.lastReceipt=null;
+      await loadSettings();
+      await refreshKPIs();
+      renderCart();
+      refreshProductPicker();
+      renderProducts();
+      renderClients();
+      renderReport("daily");
+      updateReceiptPreview();
+      alert("Borrado completo.");
+    }
+  });
+
+  // Live updates on receipt when typing client fields
+  ["cPhone","cNames","cLast","cAddr"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{
+      // Do not auto-save; only preview
+      if($("saleType").value==="ENVIO"){
+        // preview uses selectedClient; we can preview with typed values:
+        const phone = $("cPhone").value.trim();
+        const names = $("cNames").value.trim();
+        const last  = $("cLast").value.trim();
+        const addr  = $("cAddr").value.trim();
+        state.selectedClient = (phone||names||last||addr) ? {phone,names,last,addr} : null;
+      }
+      updateReceiptPreview();
+    });
+  });
+
+  // Focus scan input by pressing F2
+  window.addEventListener("keydown",(e)=>{
+    if(e.key==="F2"){
+      e.preventDefault();
+      $("scanInput").focus();
+      $("scanInput").select();
+    }
+  });
+}
+
+// ---------- Init ----------
+(async function init(){
+  db = await openDB();
+  await loadSettings();
+  await refreshKPIs();
+  await refreshProductPicker();
+  renderCart();
+  wireEvents();
+  setView("pos");
+
+  // Initialize receipt number display
+  const meta = await idbGet("meta","receiptNo");
+  const n = meta?.value ? (meta.value-1) : 1;
+  $("rNo").textContent = "#"+pad(Math.max(1,n),6);
+
+  updateReceiptPreview();
+})();
+</script>
+</body>
+</html>
