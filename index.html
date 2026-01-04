@@ -411,6 +411,16 @@
       .sidebar{ position:relative; height:auto; }
       .receipt{ width:100%; }
     }
+  
+    /* Capture mode (para PNG nítido, sin overlays) */
+    body.capture-mode .sparkle{ display:none !important; }
+    body.capture-mode #receiptBox,
+    body.capture-mode #closeBox{
+      opacity: 1 !important;
+      filter: none !important;
+      transform: none !important;
+    }
+
   </style>
 </head>
 <body>
@@ -1546,29 +1556,70 @@ function openWhatsApp(){
   window.open(url, "_blank");
 }
 
+
+// --- Seguridad (código para borrar) ---
+function requireCode(action){
+  const code = prompt(`Ingrese el código para ${action}:`);
+  if(code===null) return false;
+  if(String(code).trim() !== "363534"){
+    alert("Código incorrecto.");
+    return false;
+  }
+  return true;
+}
+
+// --- Captura PNG robusta (evita blanco/opaco) ---
+async function capturePNG(node, filename){
+  if(!node) throw new Error("Nodo no encontrado.");
+  if(!window.html2canvas) throw new Error("html2canvas no disponible.");
+
+  document.body.classList.add("capture-mode");
+  await new Promise(r=>requestAnimationFrame(r));
+
+  try{
+    const canvas = await html2canvas(node, {
+      backgroundColor:"#ffffff",
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      removeContainer: true
+    });
+
+    return await new Promise((resolve,reject)=>{
+      canvas.toBlob((blob)=>{
+        if(!blob) return reject(new Error("PNG bloqueado o en blanco."));
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(()=>URL.revokeObjectURL(url), 1000);
+        resolve(true);
+      }, "image/png");
+    });
+  }finally{
+    document.body.classList.remove("capture-mode");
+  }
+}
+
+
 // PNG (preferir html2canvas; fallback SVG)
 async function downloadReceiptPNG(){
   const node = $("receiptBox");
   if(!node) return;
 
-  // intento 1: html2canvas
+  // 1) html2canvas robusto (evita PNG en blanco / opaco)
   if(window.html2canvas){
     try{
-      const canvas = await html2canvas(node, {backgroundColor:"#ffffff", scale:2});
-      canvas.toBlob((blob)=>{
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `recibo_${(state.lastReceipt?.receiptNo||"----")}.png`;
-        a.click();
-        setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-      }, "image/png");
+      await capturePNG(node, `recibo_${(state.lastReceipt?.receiptNo||"----")}.png`);
       return;
     }catch(e){
       // fallback abajo
     }
   }
 
-  // fallback SVG foreignObject
+  // 2) fallback SVG foreignObject (si el navegador bloquea canvas)
   const w = node.offsetWidth;
   const h = node.offsetHeight;
 
@@ -1606,11 +1657,13 @@ async function downloadReceiptPNG(){
     URL.revokeObjectURL(url);
 
     cnv.toBlob((blob)=>{
+      if(!blob) return alert("Tu navegador bloqueó el PNG. Usa PDF o Copiar texto.");
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
+      const u = URL.createObjectURL(blob);
+      a.href = u;
       a.download = `recibo_${(state.lastReceipt?.receiptNo||"----")}.png`;
       a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      setTimeout(()=>URL.revokeObjectURL(u), 1000);
     }, "image/png");
   };
   img.onerror = ()=>{
@@ -1620,7 +1673,7 @@ async function downloadReceiptPNG(){
   img.src = url;
 }
 
-// PDF
+
 function receiptToPrintableHTML(s){
   const d = new Date(s.ts || Date.now()).toLocaleString();
   const clientName = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
@@ -1651,9 +1704,10 @@ function receiptToPrintableHTML(s){
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Recibo ${escapeHtml(s.receiptNo || "")}</title>
     <style>
-      body{ font-family: Arial, sans-serif; margin: 20px; color:#111; }
-      .box{ max-width: 820px; margin: 0 auto; border:1px solid #ddd; border-radius:14px; padding:16px; }
-      h1{ margin:0; font-size:18px; }
+      body{ font-family: Arial, sans-serif; margin: 20px; color:#111; background:#fff7fb; }
+      .box{ max-width: 820px; margin: 0 auto; border:2px solid #fbcfe8; border-radius:16px; padding:16px; background:#fff; }
+      .bar{ height:8px; border-radius:999px; background: linear-gradient(90deg, #ff4fb7, #a855f7); margin-bottom:12px; }
+      h1{ margin:0; font-size:18px; color:#7b2fb4; }
       .meta{ margin-top:4px; color:#444; font-size:12px; font-weight:700; }
       .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px; }
       .card{ border:1px solid #eee; border-radius:12px; padding:12px; }
@@ -1661,7 +1715,7 @@ function receiptToPrintableHTML(s){
       .val{ font-size:13px; font-weight:800; margin-top:3px; }
       table{ width:100%; border-collapse:collapse; margin-top:14px; }
       th,td{ border-bottom:1px solid #eee; padding:8px; font-size:13px; }
-      th{ background:#fafafa; text-align:left; }
+      th{ background:#ffe4f1; text-align:left; }
       .totalRow{ display:flex; justify-content:space-between; margin-top:10px; font-weight:900; font-size:14px; }
       .foot{ margin-top:12px; color:#444; font-size:12px; font-weight:700; }
       @media print{
@@ -1672,6 +1726,7 @@ function receiptToPrintableHTML(s){
   </head>
   <body onload="setTimeout(function(){window.print();},250)">
     <div class="box">
+      <div class="bar"></div>
       <h1>${escapeHtml(s.shop || "Tienda de Ropa")} — Recibo #${escapeHtml(s.receiptNo || "")}</h1>
       <div class="meta">${escapeHtml(d)} • Tipo: ${escapeHtml(s.saleType || "MOSTRADOR")} • Pago: ${escapeHtml(s.payMethod || "EFECTIVO")}</div>
 
@@ -1773,14 +1828,15 @@ function closeToPrintableHTML(c){
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Cierre ${escapeHtml(c.dateKey)}</title>
     <style>
-      body{ font-family: Arial, sans-serif; margin: 20px; color:#111; }
-      .box{ max-width: 820px; margin: 0 auto; border:1px solid #ddd; border-radius:14px; padding:16px; }
-      h1{ margin:0; font-size:18px; }
+      body{ font-family: Arial, sans-serif; margin: 20px; color:#111; background:#fff7fb; }
+      .box{ max-width: 820px; margin: 0 auto; border:2px solid #fbcfe8; border-radius:16px; padding:16px; background:#fff; }
+      .bar{ height:8px; border-radius:999px; background: linear-gradient(90deg, #ff4fb7, #a855f7); margin-bottom:12px; }
+      h1{ margin:0; font-size:18px; color:#7b2fb4; }
       .meta{ margin-top:4px; color:#444; font-size:12px; font-weight:700; }
       .line{ display:flex; justify-content:space-between; gap:12px; font-weight:800; margin:6px 0; }
       table{ width:100%; border-collapse:collapse; margin-top:14px; }
       th,td{ border-bottom:1px solid #eee; padding:8px; font-size:13px; }
-      th{ background:#fafafa; text-align:left; }
+      th{ background:#ffe4f1; text-align:left; }
       @media print{
         body{ margin:0; }
         .box{ border:none; border-radius:0; }
@@ -1789,6 +1845,7 @@ function closeToPrintableHTML(c){
   </head>
   <body onload="setTimeout(function(){window.print();},250)">
     <div class="box">
+      <div class="bar"></div>
       <h1>${escapeHtml(c.shop)} — Cierre ${escapeHtml(c.dateKey)}</h1>
       <div class="meta">Generado: ${escapeHtml(new Date(c.ts).toLocaleString())}</div>
 
@@ -1951,19 +2008,15 @@ async function downloadClosePNG(){
 
   if(window.html2canvas){
     try{
-      const canvas = await html2canvas(node, {backgroundColor:"#ffffff", scale:2});
-      canvas.toBlob((blob)=>{
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `cierre_${state.lastClose.dateKey}.png`;
-        a.click();
-        setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-      }, "image/png");
+      await capturePNG(node, `cierre_${state.lastClose.dateKey}.png`);
       return;
-    }catch(e){}
+    }catch(e){
+      // sigue al aviso abajo
+    }
   }
   alert("No se pudo generar PNG. Intenta con PDF.");
 }
+
 
 // ---------- Backup / Restore / Settings / KPIs ----------
 async function exportJSON(){
@@ -2086,7 +2139,7 @@ function wireEvents(){
   $("btnInvRefresh").addEventListener("click", renderInventory);
 
   // Cierre
-  $("btnBuildClose").addEventListener("click", buildClose);
+  $("btnBuildClose").addEventListener("click", async ()=>{ await buildClose(); alert("Cierre generado ✅"); });
   $("closeDate").addEventListener("change", ()=>{ if(state.view==="close") buildClose(); });
   $("btnCloseCopy").addEventListener("click", copyClose);
   $("btnClosePDF").addEventListener("click", generateClosePDF);
@@ -2217,6 +2270,7 @@ function wireEvents(){
       }
     }
     if(del){
+      if(!requireCode("borrar cliente")) return;
       const phone = del.dataset.delclient;
       if(confirm("¿Borrar cliente "+phone+"?")){
         await idbDel("clients", phone);
@@ -2249,6 +2303,7 @@ function wireEvents(){
       $("pCode").focus();
     }
     if(del){
+      if(!requireCode("borrar producto")) return;
       const code = del.dataset.delprod;
       if(confirm("¿Borrar producto "+code+"?")){
         await idbDel("products", code);
@@ -2279,6 +2334,7 @@ function wireEvents(){
       }
     }
     if(del){
+      if(!requireCode("borrar venta")) return;
       const id = del.dataset.delsale;
       if(confirm("¿Borrar venta?")){
         await idbDel("sales", id);
