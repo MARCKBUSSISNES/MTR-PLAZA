@@ -468,7 +468,6 @@
         <div class="actions">
           <button class="btn small" id="btnBackup">Exportar JSON</button>
           <button class="btn small" id="btnRestore">Importar JSON</button>
-          <button class="btn danger small" id="btnWipe">Borrar Todo</button>
         </div>
       </div>
 
@@ -750,7 +749,6 @@
               <div class="field full">
                 <div class="rowflex">
                   <button class="btn primary" id="btnSaveProduct">Guardar producto</button>
-                  <button class="btn" id="btnSeedDemo">Cargar demo</button>
                 </div>
                 <div class="muted">Puedes agregar manual o usar una lista demo para probar el lector.</div>
               </div>
@@ -2285,7 +2283,6 @@ function wireEvents(){
 
   // Products actions
   $("btnSaveProduct").addEventListener("click", saveProductFromForm);
-  $("btnSeedDemo").addEventListener("click", seedDemo);
   $("prodSearch").addEventListener("input", renderProducts);
   $("btnProdRefresh").addEventListener("click", ()=>{ renderProducts(); refreshProductPicker(); });
 
@@ -2355,25 +2352,6 @@ function wireEvents(){
     e.target.value="";
   });
 
-  $("btnWipe").addEventListener("click", async ()=>{
-    if(confirm("¿Seguro? Esto borra clientes, productos, ventas y contadores.")){
-      await idbClearAll();
-      state.cart=[]; state.selectedClient=null; state.lastReceipt=null; state.lastClose=null;
-      state.discount = {type:"NONE", value:0};
-      await loadSettings();
-      await refreshKPIs();
-      renderCart();
-      refreshProductPicker();
-      renderProducts();
-      renderInventory();
-      renderClients();
-      renderReport("daily");
-      buildClose();
-      syncDiscUI();
-      updateReceiptPreview();
-      alert("Borrado completo.");
-    }
-  });
 
   // Live updates on receipt when typing client fields
   ["cPhone","cNames","cLast","cAddr"].forEach(id=>{
