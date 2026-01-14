@@ -376,7 +376,7 @@
     /* Receipt */
     .receiptWrap{ display:flex; gap:12px; flex-wrap:wrap; }
     .receipt{
-      width: 360px;
+      width: 360px; /* default; can be overridden dynamically for ENVÍO */
       background: #ffffff;
       border:1px solid rgba(0,0,0,.08);
       border-radius: 18px;
@@ -416,6 +416,21 @@
     .receipt .big{ font-size:16px; font-weight:1200; display:flex; justify-content:space-between; margin-top:10px; }
     .receipt .foot{ margin-top:10px; font-size:11px; color:#666; font-weight:900 }
 
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:1000;
+      font-size:11px;
+      padding: 4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.10);
+      background: rgba(255,255,255,.7);
+      margin-top:6px;
+    }
+    .badge.pending{ border-color: rgba(245,158,11,.40); background: rgba(245,158,11,.12); color:#7a4b00; }
+    .badge.paid{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); color:#0e5b2a; }
+
     /* Responsive */
     @media (max-width: 1100px){
       .grid{ grid-template-columns: 1fr; }
@@ -453,11 +468,12 @@
 
       <div class="nav" id="nav">
         <button class="active" data-view="pos"><span>🧾 Cobro (POS)</span><span class="tag">VENTA</span></button>
+        <button data-view="shipments"><span>🚚 Envíos pendientes</span><span class="tag">ENVÍO</span></button>
         <button data-view="clients"><span>👩‍💼 Clientes</span><span class="tag">DB</span></button>
         <button data-view="reports"><span>📊 Reportes</span><span class="tag">D/W/M</span></button>
         <button data-view="products"><span>🧷 Productos</span><span class="tag">SKU</span></button>
         <button data-view="inventory"><span>📦 Inventarios</span><span class="tag">STOCK</span></button>
-        <button data-view="close"><span>🧾 Cierre</span><span class="tag">DÍA</span></button>
+        <button data-view="close"><span>🧾 Cierres</span><span class="tag">DÍA</span></button>
         <button data-view="settings"><span>⚙️ Ajustes</span><span class="tag">LOCAL</span></button>
       </div>
 
@@ -467,6 +483,7 @@
         <div class="row"><span>Productos</span><b id="kProducts">0</b></div>
         <div class="row"><span>Ventas (hoy)</span><b id="kSalesToday">0</b></div>
         <div class="row"><span>Total (hoy)</span><b id="kTotalToday">Q0.00</b></div>
+        <div class="row"><span>Envíos pendientes</span><b id="kShipPending">0</b></div>
         <div class="muted" style="margin-top:10px">
           Tip: usa <b>Escanear</b> y pasa el lector. (F2 enfoca el campo)
         </div>
@@ -570,7 +587,7 @@
             </div>
 
             <div class="muted" style="margin-top:10px">
-              *Si eliges <b>ENVÍO</b>, es obligatorio registrar/buscar cliente por teléfono.
+              *Si eliges <b>ENVÍO</b>, se crea un <b>envío pendiente</b>. Solo al marcarlo como <b>PAGADO</b> contará como venta.
             </div>
           </div>
 
@@ -647,6 +664,7 @@
                   <div>
                     <b id="rShop">Tienda de Ropa</b>
                     <small id="rMeta">Recibo • Offline</small>
+                    <div id="rStatusBadge" class="badge paid hide">✅ PAGADO</div>
                   </div>
                   <div style="text-align:right">
                     <b id="rNo">#000001</b>
@@ -670,6 +688,42 @@
               </div>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      <!-- SHIPMENTS VIEW -->
+      <section id="view-shipments" class="hide">
+        <div class="card">
+          <h3>🚚 Envíos pendientes (solo ENVÍO)</h3>
+          <div class="rowflex">
+            <input id="shipSearch" class="grow" placeholder="Buscar por teléfono, nombre o #recibo..."/>
+            <select id="shipFilter" style="max-width:220px">
+              <option value="ALL">Todos</option>
+              <option value="PENDIENTE">Pendientes</option>
+              <option value="PAGADO">Pagados</option>
+            </select>
+            <button class="btn" id="btnShipRefresh">Refrescar</button>
+          </div>
+          <div class="muted" style="margin-top:8px">
+            Al cobrar en <b>ENVÍO</b>, el envío queda <b>PENDIENTE</b>. Solo al marcar <b>PAGADO</b> se crea la venta (aparece en reportes/cierres).
+          </div>
+
+          <div style="margin-top:12px; overflow:auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Recibo</th>
+                  <th>Cliente</th>
+                  <th>Pago</th>
+                  <th>Total</th>
+                  <th>Estatus</th>
+                  <th style="width:240px">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="shipBody"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -803,7 +857,7 @@
             <input id="invSearch" class="grow" placeholder="Buscar por código o nombre..."/>
             <button class="btn" id="btnInvRefresh">Refrescar</button>
           </div>
-          <div class="muted" style="margin-top:8px">Muestra el stock actual. Se descuenta automáticamente al cobrar.</div>
+          <div class="muted" style="margin-top:8px">Muestra el stock actual. Se descuenta automáticamente al cobrar (y también cuando se crea un envío pendiente).</div>
 
           <div style="margin-top:12px; overflow:auto">
             <table class="table">
@@ -825,18 +879,68 @@
       <section id="view-close" class="hide">
         <div class="grid">
           <div class="card">
-            <h3>🧾 Cierre de ventas (día/turno)</h3>
+            <h3>🧾 Cierres de ventas (múltiples por día)</h3>
 
             <div class="rowflex">
-              <div class="field" style="min-width:240px">
-                <label>Fecha del cierre</label>
+              <div class="field" style="min-width:220px">
+                <label>Fecha</label>
                 <input id="closeDate" type="date" />
               </div>
+              <div class="field" style="min-width:180px">
+                <label>Desde (hora)</label>
+                <input id="closeFrom" type="time" value="00:00"/>
+              </div>
+              <div class="field" style="min-width:180px">
+                <label>Hasta (hora)</label>
+                <input id="closeTo" type="time" value="23:59"/>
+              </div>
               <button class="btn primary" id="btnBuildClose">Generar cierre</button>
+              <button class="btn ok" id="btnSaveClose">Guardar cierre</button>
             </div>
 
             <div class="muted" style="margin-top:10px">
-              Incluye ventas del día, formas de pago, descuentos, envíos y productos vendidos.
+              El cierre toma <b>solo ventas PAGADAS</b> dentro del rango (fecha + horas). Puedes guardar varios cierres por día.
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h3>💰 Cuadre por forma de pago</h3>
+              <div class="form">
+                <div class="field">
+                  <label>EFECTIVO contado (real)</label>
+                  <input id="realCash" type="number" min="0" step="0.01" value="0"/>
+                </div>
+                <div class="field">
+                  <label>TARJETA (real)</label>
+                  <input id="realCard" type="number" min="0" step="0.01" value="0"/>
+                </div>
+                <div class="field full">
+                  <label>TRANSFERENCIA (real)</label>
+                  <input id="realTrans" type="number" min="0" step="0.01" value="0"/>
+                </div>
+              </div>
+              <div class="muted" style="margin-top:8px">
+                Diferencia = Real - Sistema. (positivo = sobra, negativo = falta)
+              </div>
+              <div class="totals">
+                <div class="kpi">
+                  <div class="label">Dif. EFECTIVO</div>
+                  <div class="value" id="diffCash">Q0.00</div>
+                </div>
+                <div class="kpi">
+                  <div class="label">Dif. TARJETA</div>
+                  <div class="value" id="diffCard">Q0.00</div>
+                </div>
+              </div>
+              <div class="totals">
+                <div class="kpi">
+                  <div class="label">Dif. TRANSFER.</div>
+                  <div class="value" id="diffTrans">Q0.00</div>
+                </div>
+                <div class="kpi">
+                  <div class="label">Dif. TOTAL</div>
+                  <div class="value" id="diffTotal">Q0.00</div>
+                </div>
+              </div>
             </div>
 
             <div style="margin-top:12px; overflow:auto">
@@ -852,6 +956,30 @@
                 </thead>
                 <tbody id="closeHistBody"></tbody>
               </table>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <h3>🗂️ Historial de cierres guardados (por fecha)</h3>
+              <div class="rowflex">
+                <button class="btn" id="btnCloseListRefresh">Refrescar</button>
+              </div>
+              <div style="margin-top:10px; overflow:auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Rango</th>
+                      <th>Ventas</th>
+                      <th>Total</th>
+                      <th style="width:180px">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody id="closeSavedBody"></tbody>
+                </table>
+              </div>
+              <div class="muted" style="margin-top:8px">
+                Borrar cierre guardado requiere código <b>363534</b>.
+              </div>
             </div>
           </div>
 
@@ -932,6 +1060,31 @@
             </div>
 
             <div class="field full">
+              <h3 style="margin:8px 0 0 0">📏 Tamaños (solo para ENVÍO)</h3>
+              <div class="muted">Cambiar estos tamaños requiere código <b>363534</b>. MOSTRADOR sigue con tamaño actual.</div>
+            </div>
+
+            <div class="field">
+              <label>PNG: Ancho recibo (px)</label>
+              <input id="sEnvPngWidth" type="number" min="260" step="1" placeholder="Ej: 360"/>
+            </div>
+
+            <div class="field">
+              <label>PNG: Escala (1 a 4)</label>
+              <input id="sEnvPngScale" type="number" min="1" max="4" step="1" placeholder="Ej: 2"/>
+            </div>
+
+            <div class="field">
+              <label>PDF: Ancho papel (mm)</label>
+              <input id="sEnvPdfWidth" type="number" min="50" max="120" step="1" placeholder="Ej: 80"/>
+            </div>
+
+            <div class="field">
+              <label>PDF: Margen (mm)</label>
+              <input id="sEnvPdfMargin" type="number" min="0" max="20" step="1" placeholder="Ej: 6"/>
+            </div>
+
+            <div class="field full">
               <button class="btn primary" id="btnSaveSettings">Guardar</button>
             </div>
           </div>
@@ -956,23 +1109,31 @@
    - Mantiene diseño y funciones originales
    - + Inventarios en menú
    - + Descuentos (Q/%)
-   - + Cierre de ventas (día)
-   - + Auto PDF/PNG al cobrar
-   - Fix WhatsApp: saltos de línea reales
+   - + Cierres múltiples por día + cuadre por forma de pago
+   - + Envíos pendientes: PENDIENTE/PAGADO (solo PAGADO pasa a ventas)
+   - + Tamaños PNG/PDF configurables SOLO para ENVÍO (con código 363534)
 ============================================================ */
 
 const DB_NAME = "pos_boutique_offline_v1";
-const DB_VER = 2;
+const DB_VER = 4; // subimos versión
 let db;
 
 const state = {
   view: "pos",
   cart: [],
   selectedClient: null,
-  lastReceipt: null,
+  lastReceipt: null,  // puede ser venta o envío (pending/paid)
   lastClose: null,
   discount: { type:"NONE", value:0 },
-  settings: { shopName: "Tienda de Ropa", autoPDF:true, autoPNG:true }
+  settings: {
+    shopName: "Tienda de Ropa",
+    autoPDF:true,
+    autoPNG:true,
+    envPngWidth: 360,
+    envPngScale: 2,
+    envPdfWidthMM: 80,
+    envPdfMarginMM: 6
+  }
 };
 
 const $ = (id)=>document.getElementById(id);
@@ -997,6 +1158,19 @@ function openDB(){
         const s = db.createObjectStore("sales", { keyPath:"id" });
         s.createIndex("ts", "ts", { unique:false });
       }
+      // NUEVO: shipments (envíos pendientes)
+      if(!db.objectStoreNames.contains("shipments")){
+        const s = db.createObjectStore("shipments", { keyPath:"id" });
+        s.createIndex("ts", "ts", { unique:false });
+        s.createIndex("status", "status", { unique:false });
+      }
+      // NUEVO: closes (cierres guardados)
+      if(!db.objectStoreNames.contains("closes")){
+        const s = db.createObjectStore("closes", { keyPath:"id" });
+        s.createIndex("ts", "ts", { unique:false });
+        s.createIndex("dateKey", "dateKey", { unique:false });
+      }
+
       if(!db.objectStoreNames.contains("meta")){
         db.createObjectStore("meta", { keyPath:"key" });
       }
@@ -1042,6 +1216,8 @@ function idbClearAll(){
     new Promise((res,rej)=>{ const r=db.transaction("clients","readwrite").objectStore("clients").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
     new Promise((res,rej)=>{ const r=db.transaction("products","readwrite").objectStore("products").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
     new Promise((res,rej)=>{ const r=db.transaction("sales","readwrite").objectStore("sales").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
+    new Promise((res,rej)=>{ const r=db.transaction("shipments","readwrite").objectStore("shipments").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
+    new Promise((res,rej)=>{ const r=db.transaction("closes","readwrite").objectStore("closes").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
     new Promise((res,rej)=>{ const r=db.transaction("meta","readwrite").objectStore("meta").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
   ]);
 }
@@ -1079,16 +1255,31 @@ function normKey(s){
   return String(s||"").trim().toLowerCase().replace(/\s+/g," ");
 }
 function pad(n,len=6){ return String(n).padStart(len,"0"); }
+function timeToMinutes(hhmm){
+  const [h,m] = String(hhmm||"00:00").split(":").map(x=>Number(x||0));
+  return (h*60)+(m||0);
+}
+function isWithinDateRange(ts, dateKey, fromHHMM, toHHMM){
+  const d = new Date(ts);
+  const dk = todayKey(ts);
+  if(dk !== dateKey) return false;
+  const mins = d.getHours()*60 + d.getMinutes();
+  const a = timeToMinutes(fromHHMM);
+  const b = timeToMinutes(toHHMM);
+  // rango normal (no cruzando medianoche)
+  return mins >= a && mins <= b;
+}
 
 // ---------- UI Nav ----------
 const views = {
   pos: {title:"Cobro (POS)", sub:""},
+  shipments: {title:"Envíos pendientes", sub:"Gestión de envíos: PENDIENTE/PAGADO."},
   clients: {title:"Clientes", sub:"Busca por teléfono, edita y usa para envíos."},
-  reports: {title:"Reportes", sub:"Diario / Semanal / Mensual con historial de ventas."},
+  reports: {title:"Reportes", sub:"Diario / Semanal / Mensual con historial de ventas (solo pagadas)."},
   products: {title:"Productos", sub:"Agrega productos con código, nombre, precio y stock."},
   inventory: {title:"Inventarios", sub:"Tabla de productos + stock actual."},
-  close: {title:"Cierre", sub:"Resumen del día + historial y productos vendidos."},
-  settings: {title:"Ajustes", sub:"Nombre de tienda y respaldos (exportar/importar)."}
+  close: {title:"Cierres", sub:"Cierres múltiples + cuadre por forma de pago."},
+  settings: {title:"Ajustes", sub:"Nombre de tienda, tamaños ENVÍO y respaldos (exportar/importar)."}
 };
 
 function setView(v){
@@ -1108,6 +1299,7 @@ function setView(v){
   if(v==="reports") renderReport("daily");
   if(v==="inventory") renderInventory();
   if(v==="close") buildClose();
+  if(v==="shipments") renderShipments();
 }
 
 // ---------- Descuentos ----------
@@ -1340,7 +1532,7 @@ async function renderInventory(){
   }
 }
 
-// ---------- Sales / Checkout ----------
+// ---------- Sales / Shipments / Checkout ----------
 async function nextReceiptNo(){
   const meta = await idbGet("meta","receiptNo");
   const n = meta?.value ? Number(meta.value) : 1;
@@ -1359,6 +1551,34 @@ function requireClientIfShipping(){
   return {ok:true};
 }
 
+async function validateStockForCart(){
+  for(const it of state.cart){
+    const p = await getProductByCode(it.code);
+    if(!p) return {ok:false, msg:"Producto no existe: " + it.code};
+    if(Number(p.stock||0) < it.qty) return {ok:false, msg:`Stock insuficiente para "${p.name}". Stock:${p.stock} Cant:${it.qty}`};
+  }
+  return {ok:true};
+}
+
+async function deductStockForCart(){
+  for(const it of state.cart){
+    const p = await getProductByCode(it.code);
+    p.stock = Number(p.stock||0) - it.qty;
+    p.updatedAt = Date.now();
+    await idbPut("products", p);
+  }
+}
+
+async function restoreStockForItems(items){
+  for(const it of (items||[])){
+    const p = await getProductByCode(it.code);
+    if(!p) continue;
+    p.stock = Number(p.stock||0) + Number(it.qty||0);
+    p.updatedAt = Date.now();
+    await idbPut("products", p);
+  }
+}
+
 async function checkout(){
   if(state.cart.length===0) return alert("No hay productos en la venta.");
   const clientRule = requireClientIfShipping();
@@ -1375,21 +1595,64 @@ async function checkout(){
   const id = "S-" + ts + "-" + Math.random().toString(16).slice(2,8);
   const receiptNo = await nextReceiptNo();
 
-  // Validate stock + deduct
-  for(const it of state.cart){
-    const p = await getProductByCode(it.code);
-    if(!p) return alert("Producto no existe: " + it.code);
-    if(Number(p.stock||0) < it.qty) return alert(`Stock insuficiente para "${p.name}". Stock:${p.stock} Cant:${it.qty}`);
-  }
-  for(const it of state.cart){
-    const p = await getProductByCode(it.code);
-    p.stock = Number(p.stock||0) - it.qty;
-    p.updatedAt = Date.now();
-    await idbPut("products", p);
-  }
+  // Validar stock siempre (MOSTRADOR y ENVÍO)
+  const st = await validateStockForCart();
+  if(!st.ok) return alert(st.msg);
+
+  // Opción A: ENVIÓ descuenta stock al crear el envío pendiente (lo que tú elegiste).
+  await deductStockForCart();
 
   const client = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
 
+  if(saleType === "ENVIO"){
+    // Crear ENVÍO pendiente (no entra a ventas/reporte/cierre hasta que se marque PAGADO)
+    const shipment = {
+      id: "E-" + ts + "-" + Math.random().toString(16).slice(2,8),
+      ts,
+      dateKey: todayKey(ts),
+      weekKey: weekKey(ts),
+      monthKey: monthKey(ts),
+      saleType, payMethod,
+      status: "PENDIENTE",
+      client: client ? { phone:client.phone, names:client.names, last:client.last, addr:client.addr } : null,
+      items: state.cart.map(x=>({...x})),
+      subtotal: Number(subtotal.toFixed(2)),
+      discountType: state.discount.type,
+      discountValue: Number(state.discount.value||0),
+      discountAmount: Number(discountAmount.toFixed(2)),
+      total: Number(total.toFixed(2)),
+      receiptNo: pad(receiptNo, 6),
+      shop: state.settings.shopName || "Tienda de Ropa",
+      stockDeducted: true,
+      paidAt: null,
+      saleId: null
+    };
+
+    await idbPut("shipments", shipment);
+    state.lastReceipt = shipment;
+
+    // reset carrito + descuento
+    state.discount = {type:"NONE", value:0};
+    syncDiscUI();
+    cartClear();
+
+    // limpiar UI + KPIs
+    await refreshKPIs();
+    refreshProductPicker();
+    if(state.view==="inventory") renderInventory();
+    updateReceiptPreview();
+    if(state.view==="shipments") renderShipments();
+
+    // Auto descargas SOLO si quieres (respetamos tu setting auto)
+    // Nota: aunque sea pendiente, puedes generar comprobante para el cliente; NO cuenta como venta.
+    if(state.settings.autoPDF) setTimeout(()=>{ try{ generatePDF(); }catch(e){} }, 200);
+    if(state.settings.autoPNG) setTimeout(()=>{ try{ downloadReceiptPNG(); }catch(e){} }, 700);
+
+    alert("Envío creado como PENDIENTE. En 'Envíos pendientes' puedes marcarlo como PAGADO para que cuente como venta.");
+    return;
+  }
+
+  // MOSTRADOR: sí es venta directa
   const sale = {
     id, ts,
     dateKey: todayKey(ts),
@@ -1404,7 +1667,8 @@ async function checkout(){
     discountAmount: Number(discountAmount.toFixed(2)),
     total: Number(total.toFixed(2)),
     receiptNo: pad(receiptNo, 6),
-    shop: state.settings.shopName || "Tienda de Ropa"
+    shop: state.settings.shopName || "Tienda de Ropa",
+    source: "DIRECT"
   };
 
   await idbPut("sales", sale);
@@ -1425,6 +1689,146 @@ async function checkout(){
   if(state.settings.autoPNG) setTimeout(()=>{ try{ downloadReceiptPNG(); }catch(e){} }, 700);
 
   alert("Venta registrada. Recibo listo para WhatsApp/PDF/PNG.");
+}
+
+// ---------- Shipments ----------
+function shipmentClientName(s){
+  return s.client ? `${s.client.names} ${s.client.last}` : "—";
+}
+function shipmentSearchKey(s){
+  return normKey(`${s.receiptNo||""} ${s.client?.phone||""} ${shipmentClientName(s)} ${s.client?.addr||""}`);
+}
+async function renderShipments(){
+  const q = normKey($("shipSearch").value);
+  const f = $("shipFilter").value || "ALL";
+  const all = await idbAll("shipments");
+
+  let list = all;
+  if(f !== "ALL") list = list.filter(s => (s.status||"PENDIENTE") === f);
+  if(q) list = list.filter(s => shipmentSearchKey(s).includes(q));
+
+  list.sort((a,b)=>b.ts-a.ts);
+
+  const tb = $("shipBody");
+  tb.innerHTML = "";
+
+  for(const s of list){
+    const d = new Date(s.ts).toLocaleString();
+    const tr = document.createElement("tr");
+    const status = s.status || "PENDIENTE";
+    const statusHtml = status==="PAGADO"
+      ? `<span style="font-weight:1000;color:#0e5b2a">✅ PAGADO</span>`
+      : `<span style="font-weight:1000;color:#7a4b00">⏳ PENDIENTE</span>`;
+
+    tr.innerHTML = `
+      <td><small>${escapeHtml(d)}</small></td>
+      <td><b>#${escapeHtml(s.receiptNo||"")}</b></td>
+      <td>${escapeHtml(shipmentClientName(s))}<br><small>${escapeHtml(s.client?.phone||"")}</small></td>
+      <td>${escapeHtml(s.payMethod||"")}</td>
+      <td>${money(s.total||0)}</td>
+      <td>${statusHtml}</td>
+      <td>
+        <button class="btn small" data-viewship="${escapeHtml(s.id)}">Ver</button>
+        <button class="btn ok small" data-payship="${escapeHtml(s.id)}">Marcar PAGADO</button>
+        <button class="btn small" data-pendship="${escapeHtml(s.id)}">Marcar PEND.</button>
+        <button class="btn danger small" data-delship="${escapeHtml(s.id)}">Borrar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+}
+
+async function markShipmentPaid(id){
+  const s = await idbGet("shipments", id);
+  if(!s) return alert("Envío no encontrado.");
+  if((s.status||"PENDIENTE")==="PAGADO"){
+    alert("Ya está PAGADO.");
+    return;
+  }
+
+  // Crear venta desde el envío (NO tocar stock, ya se descontó en creación)
+  const ts = Date.now();
+  const saleId = "S-" + ts + "-" + Math.random().toString(16).slice(2,8);
+
+  const sale = {
+    id: saleId,
+    ts: ts,
+    dateKey: todayKey(ts),
+    weekKey: weekKey(ts),
+    monthKey: monthKey(ts),
+    saleType: "ENVIO",
+    payMethod: s.payMethod,
+    client: s.client || null,
+    items: (s.items||[]).map(x=>({...x})),
+    subtotal: Number((s.subtotal ?? s.total ?? 0).toFixed(2)),
+    discountType: s.discountType || "NONE",
+    discountValue: Number(s.discountValue||0),
+    discountAmount: Number((s.discountAmount ?? 0).toFixed(2)),
+    total: Number((s.total ?? 0).toFixed(2)),
+    receiptNo: s.receiptNo,
+    shop: s.shop || state.settings.shopName || "Tienda de Ropa",
+    source: "SHIPMENT",
+    shipmentId: s.id,
+    paidAt: ts
+  };
+
+  await idbPut("sales", sale);
+
+  // Actualizar envío a PAGADO (mantener, para historial)
+  s.status = "PAGADO";
+  s.paidAt = ts;
+  s.saleId = saleId;
+  await idbPut("shipments", s);
+
+  state.lastReceipt = sale;
+  await refreshKPIs();
+  if(state.view==="shipments") renderShipments();
+  if(state.view==="reports") renderReport("daily");
+  updateReceiptPreview();
+  buildClose();
+
+  alert("Envío marcado como PAGADO. Ya cuenta como venta en Reportes y Cierres.");
+}
+
+async function markShipmentPending(id){
+  const s = await idbGet("shipments", id);
+  if(!s) return alert("Envío no encontrado.");
+  if((s.status||"PENDIENTE")==="PENDIENTE"){
+    alert("Ya está PENDIENTE.");
+    return;
+  }
+
+  // Si ya tenía venta creada, NO la borramos automáticamente para no romper historiales;
+  // Mejor avisamos.
+  if(s.saleId){
+    alert("Este envío ya generó una venta. Si quieres revertirlo, borra la venta en Reportes (con código) y luego marca pendiente.");
+  }
+
+  s.status = "PENDIENTE";
+  await idbPut("shipments", s);
+  await refreshKPIs();
+  if(state.view==="shipments") renderShipments();
+  updateReceiptPreview();
+}
+
+async function deleteShipment(id){
+  if(!requireCode("borrar envío")) return;
+  const s = await idbGet("shipments", id);
+  if(!s) return;
+  if(!confirm("¿Borrar envío #"+(s.receiptNo||"") + "?")) return;
+
+  // Si era pendiente (o incluso pagado), restauramos stock SOLO si fue descontado y todavía está en shipments.
+  // Nota: Si ya se vendió (saleId), normalmente NO se debería restaurar porque la venta existe. Lo protegemos:
+  if(s.stockDeducted && !s.saleId){
+    await restoreStockForItems(s.items||[]);
+  }
+
+  await idbDel("shipments", id);
+  await refreshKPIs();
+  renderShipments();
+  renderInventory();
+  refreshProductPicker();
+  alert("Envío borrado.");
 }
 
 // ---------- Reports ----------
@@ -1470,6 +1874,19 @@ async function renderReport(mode){
 }
 
 // ---------- Receipt (text + preview + PDF + PNG) ----------
+function applyEnvReceiptSizing(saleType){
+  const node = $("receiptBox");
+  if(!node) return;
+
+  // Solo ENVÍO aplica tamaño configurable
+  if(saleType === "ENVIO"){
+    const w = Number(state.settings.envPngWidth || 360);
+    node.style.width = Math.max(260, Math.min(520, w)) + "px";
+  }else{
+    node.style.width = ""; // vuelve a CSS default
+  }
+}
+
 function makeLiveReceipt(){
   const saleType = $("saleType").value;
   const payMethod = $("payMethod").value;
@@ -1479,6 +1896,7 @@ function makeLiveReceipt(){
     receiptNo: state.lastReceipt?.receiptNo || String($("rNo").textContent||"").replace("#","") || "------",
     shop: state.settings.shopName,
     saleType, payMethod,
+    status: (saleType==="ENVIO") ? "PENDIENTE" : "PAGADO",
     client: c ? {phone:c.phone, names:c.names, last:c.last, addr:c.addr} : null,
     items: state.cart.map(x=>({...x})),
     subtotal: cartSubtotal(),
@@ -1493,10 +1911,12 @@ function saleToReceiptText(s){
   const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
   const phone = s.client?.phone || "—";
   const addr  = s.client?.addr || "—";
+  const status = s.status ? `Estatus: ${s.status}` : "";
   const lines = [];
   lines.push(`🧾 *${s.shop}*`);
   lines.push(`Recibo #${s.receiptNo}`);
   lines.push(`Fecha: ${d}`);
+  if(status) lines.push(status);
   lines.push(`Tipo: ${s.saleType} | Pago: ${s.payMethod}`);
   lines.push(`Cliente: ${client}`);
   lines.push(`Tel: ${phone}`);
@@ -1515,6 +1935,10 @@ function saleToReceiptText(s){
 
 function updateReceiptPreview(){
   const s = state.lastReceipt || makeLiveReceipt();
+  const saleType = s.saleType || $("saleType").value;
+
+  applyEnvReceiptSizing(saleType);
+
   $("rShop").textContent = s.shop || state.settings.shopName || "Tienda de Ropa";
   $("rMeta").textContent = `Recibo • ${s.saleType || "MOSTRADOR"} • ${s.payMethod || "EFECTIVO"}`;
   $("rNo").textContent = "#" + (s.receiptNo || "------");
@@ -1525,6 +1949,17 @@ function updateReceiptPreview(){
   $("rPhone").textContent = s.client?.phone || "—";
   $("rAddr").textContent  = s.client?.addr || "—";
   $("rPay").textContent   = s.payMethod || $("payMethod").value;
+
+  const badge = $("rStatusBadge");
+  const status = s.status || (saleType==="ENVIO" ? "PENDIENTE" : "PAGADO");
+  badge.classList.remove("hide","pending","paid");
+  if(status === "PENDIENTE"){
+    badge.textContent = "⏳ PENDIENTE";
+    badge.classList.add("pending");
+  }else{
+    badge.textContent = "✅ PAGADO";
+    badge.classList.add("paid");
+  }
 
   const itemsDiv = $("rItems");
   itemsDiv.innerHTML = "";
@@ -1582,17 +2017,19 @@ function requireBackupCode(action){
 }
 
 // --- Captura PNG robusta (evita blanco/opaco) ---
-async function capturePNG(node, filename){
+async function capturePNG(node, filename, scaleOverride=null){
   if(!node) throw new Error("Nodo no encontrado.");
   if(!window.html2canvas) throw new Error("html2canvas no disponible.");
 
   document.body.classList.add("capture-mode");
   await new Promise(r=>requestAnimationFrame(r));
 
+  const scale = scaleOverride ? Number(scaleOverride) : 2;
+
   try{
     const canvas = await html2canvas(node, {
       backgroundColor:"#ffffff",
-      scale: 2,
+      scale: Math.max(1, Math.min(4, scale)),
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -1622,10 +2059,14 @@ async function downloadReceiptPNG(){
   const node = $("receiptBox");
   if(!node) return;
 
+  const s = state.lastReceipt || makeLiveReceipt();
+  const isEnv = (s.saleType === "ENVIO");
+  const scale = isEnv ? Number(state.settings.envPngScale||2) : 2;
+
   // 1) html2canvas robusto (evita PNG en blanco / opaco)
   if(window.html2canvas){
     try{
-      await capturePNG(node, `recibo_${(state.lastReceipt?.receiptNo||"----")}.png`);
+      await capturePNG(node, `recibo_${(s.receiptNo||"----")}.png`, scale);
       return;
     }catch(e){
       // fallback abajo
@@ -1661,10 +2102,11 @@ async function downloadReceiptPNG(){
   const img = new Image();
   img.onload = ()=>{
     const cnv = $("cnv");
-    cnv.width = w*2;
-    cnv.height = h*2;
+    const sc = Math.max(1, Math.min(4, scale));
+    cnv.width = w*sc;
+    cnv.height = h*sc;
     const ctx = cnv.getContext("2d");
-    ctx.scale(2,2);
+    ctx.scale(sc,sc);
     ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
     ctx.drawImage(img, 0,0);
     URL.revokeObjectURL(url);
@@ -1674,7 +2116,7 @@ async function downloadReceiptPNG(){
       const a = document.createElement("a");
       const u = URL.createObjectURL(blob);
       a.href = u;
-      a.download = `recibo_${(state.lastReceipt?.receiptNo||"----")}.png`;
+      a.download = `recibo_${(s.receiptNo||"----")}.png`;
       a.click();
       setTimeout(()=>URL.revokeObjectURL(u), 1000);
     }, "image/png");
@@ -1685,7 +2127,6 @@ async function downloadReceiptPNG(){
   };
   img.src = url;
 }
-
 
 function receiptToPrintableHTML(s){
   const d = new Date(s.ts || Date.now()).toLocaleString();
@@ -1709,6 +2150,19 @@ function receiptToPrintableHTML(s){
   const disc = Number(s.discountAmount ?? 0);
   const total = Number(s.total ?? 0);
 
+  const isEnv = (s.saleType === "ENVIO");
+  const pageW = isEnv ? Number(state.settings.envPdfWidthMM||80) : null;
+  const pageM = isEnv ? Number(state.settings.envPdfMarginMM||6) : 10;
+
+  // CSS: cuando es ENVÍO aplicamos @page width mm para impresora térmica
+  const pageCss = isEnv
+    ? `@page{ size: ${pageW}mm auto; margin: ${pageM}mm; }`
+    : `@page{ margin: 12mm; }`;
+
+  const boxWidth = isEnv ? `max-width: ${Math.max(50,Math.min(120,pageW))}mm;` : `max-width: 820px;`;
+
+  const statusLine = s.status ? `<div class="meta" style="margin-top:6px;color:#a16207;font-weight:900">Estatus: ${escapeHtml(s.status)}</div>` : ``;
+
   return `
   <!doctype html>
   <html lang="es">
@@ -1717,8 +2171,9 @@ function receiptToPrintableHTML(s){
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Recibo ${escapeHtml(s.receiptNo || "")}</title>
     <style>
-      body{ font-family: Arial, sans-serif; margin: 20px; color:#111; background:#fff7fb; }
-      .box{ position:relative; max-width: 820px; margin: 0 auto; border:2px solid #fbcfe8; border-radius:16px; padding:16px; background:#fff; }
+      ${pageCss}
+      body{ font-family: Arial, sans-serif; margin: 0; color:#111; background:#fff7fb; }
+      .box{ position:relative; ${boxWidth} margin: 0 auto; border:2px solid #fbcfe8; border-radius:16px; padding:16px; background:#fff; }
       .cornerLogo{ position:absolute; top:12px; right:12px; width:60px; height:60px; object-fit:contain; border-radius:14px; border:1px solid #eee; padding:4px; background:#fff; }
       .bar{ height:8px; border-radius:999px; background: linear-gradient(90deg, #ff4fb7, #a855f7); margin-bottom:12px; }
       h1{ margin:0; font-size:18px; color:#7b2fb4; padding-right:70px; }
@@ -1733,7 +2188,7 @@ function receiptToPrintableHTML(s){
       .totalRow{ display:flex; justify-content:space-between; margin-top:10px; font-weight:900; font-size:14px; }
       .foot{ margin-top:12px; color:#444; font-size:12px; font-weight:700; }
       @media print{
-        body{ margin:0; }
+        body{ background:#fff; }
         .box{ border:none; border-radius:0; }
       }
     </style>
@@ -1744,6 +2199,7 @@ function receiptToPrintableHTML(s){
       <div class="bar"></div>
       <h1>${escapeHtml(s.shop || "Tienda de Ropa")} — Recibo #${escapeHtml(s.receiptNo || "")}</h1>
       <div class="meta">${escapeHtml(d)} • Tipo: ${escapeHtml(s.saleType || "MOSTRADOR")} • Pago: ${escapeHtml(s.payMethod || "EFECTIVO")}</div>
+      ${statusLine}
 
       <div class="grid">
         <div class="card">
@@ -1804,7 +2260,7 @@ function closeToText(c){
   if(!c) return "No hay cierre todavía.";
   const lines = [];
   lines.push(`🧾 *${c.shop}*`);
-  lines.push(`CIERRE DE VENTAS — ${c.dateKey}`);
+  lines.push(`CIERRE DE VENTAS — ${c.dateKey} (${c.fromHHMM} - ${c.toHHMM})`);
   lines.push(`Generado: ${new Date(c.ts).toLocaleString()}`);
   lines.push(`--------------------------------`);
   lines.push(`Ventas: ${c.salesCount}`);
@@ -1817,6 +2273,12 @@ function closeToText(c){
   lines.push(`SUBTOTAL: ${money(c.subtotal)}`);
   lines.push(`DESCUENTOS: ${money(c.discounts)}`);
   lines.push(`TOTAL: *${money(c.total)}*`);
+  lines.push(`--------------------------------`);
+  lines.push(`CUADRE (Real - Sistema):`);
+  lines.push(`EFECTIVO: ${money(c.diff?.EFECTIVO||0)}`);
+  lines.push(`TARJETA: ${money(c.diff?.TARJETA||0)}`);
+  lines.push(`TRANSFER.: ${money(c.diff?.TRANSFERENCIA||0)}`);
+  lines.push(`TOTAL: ${money(c.diffTotal||0)}`);
   lines.push(`--------------------------------`);
   lines.push(`Productos vendidos:`);
   for(const p of c.products){
@@ -1863,7 +2325,7 @@ function closeToPrintableHTML(c){
     <div class="box">
       <img class="cornerLogo" src="LOGO1.png" alt="Logo" />
       <div class="bar"></div>
-      <h1>${escapeHtml(c.shop)} — Cierre ${escapeHtml(c.dateKey)}</h1>
+      <h1>${escapeHtml(c.shop)} — Cierre ${escapeHtml(c.dateKey)} (${escapeHtml(c.fromHHMM)}-${escapeHtml(c.toHHMM)})</h1>
       <div class="meta">Generado: ${escapeHtml(new Date(c.ts).toLocaleString())}</div>
 
       <div class="line"><span>Ventas</span><span>${c.salesCount}</span></div>
@@ -1880,6 +2342,12 @@ function closeToPrintableHTML(c){
       <div class="line"><span>DESCUENTOS</span><span>${money(c.discounts)}</span></div>
       <div class="line"><span>TOTAL</span><span>${money(c.total)}</span></div>
 
+      <h3 style="margin-top:14px">Cuadre (Real - Sistema)</h3>
+      <div class="line"><span>EFECTIVO</span><span>${money(c.diff?.EFECTIVO||0)}</span></div>
+      <div class="line"><span>TARJETA</span><span>${money(c.diff?.TARJETA||0)}</span></div>
+      <div class="line"><span>TRANSFER.</span><span>${money(c.diff?.TRANSFERENCIA||0)}</span></div>
+      <div class="line"><span>TOTAL</span><span>${money(c.diffTotal||0)}</span></div>
+
       <h3 style="margin-top:14px">Productos vendidos</h3>
       <table>
         <thead><tr><th style="width:80px;text-align:center">Cant</th><th>Producto</th></tr></thead>
@@ -1895,8 +2363,11 @@ function closeToPrintableHTML(c){
 
 async function buildClose(){
   const dateKey = $("closeDate").value || todayKey();
+  const fromHHMM = $("closeFrom").value || "00:00";
+  const toHHMM   = $("closeTo").value || "23:59";
+
   const all = await idbAll("sales");
-  const list = all.filter(s=>s.dateKey===dateKey).sort((a,b)=>a.ts-b.ts);
+  const list = all.filter(s=> isWithinDateRange(s.ts, dateKey, fromHHMM, toHHMM)).sort((a,b)=>a.ts-b.ts);
 
   const pay = {EFECTIVO:0, TARJETA:0, TRANSFERENCIA:0};
   let subtotal = 0;
@@ -1945,9 +2416,30 @@ async function buildClose(){
     hb.appendChild(tr);
   }
 
+  // Cuadre
+  const realCash = Number($("realCash").value||0);
+  const realCard = Number($("realCard").value||0);
+  const realTrans= Number($("realTrans").value||0);
+
+  const diff = {
+    EFECTIVO: Number((realCash - (pay.EFECTIVO||0)).toFixed(2)),
+    TARJETA: Number((realCard - (pay.TARJETA||0)).toFixed(2)),
+    TRANSFERENCIA: Number((realTrans - (pay.TRANSFERENCIA||0)).toFixed(2))
+  };
+  const diffTotal = Number((diff.EFECTIVO + diff.TARJETA + diff.TRANSFERENCIA).toFixed(2));
+
+  // mostrar difs
+  $("diffCash").textContent = money(diff.EFECTIVO);
+  $("diffCard").textContent = money(diff.TARJETA);
+  $("diffTrans").textContent = money(diff.TRANSFERENCIA);
+  $("diffTotal").textContent = money(diffTotal);
+
   const close = {
+    id: "C-TMP",
     ts: Date.now(),
     dateKey,
+    fromHHMM,
+    toHHMM,
     shop: state.settings.shopName || "Tienda de Ropa",
     salesCount: list.length,
     envioCount,
@@ -1956,14 +2448,17 @@ async function buildClose(){
     subtotal: Number(subtotal.toFixed(2)),
     discounts: Number(discounts.toFixed(2)),
     total: Number(total.toFixed(2)),
-    products
+    products,
+    real: {EFECTIVO: realCash, TARJETA: realCard, TRANSFERENCIA: realTrans},
+    diff,
+    diffTotal
   };
 
   state.lastClose = close;
 
   // pintar ticket de cierre
   $("cShop").textContent = close.shop;
-  $("cMeta").textContent = "Cierre • Día";
+  $("cMeta").textContent = `Cierre • ${close.fromHHMM}-${close.toHHMM}`;
   $("cDate").textContent = close.dateKey;
   $("cTime").textContent = new Date(close.ts).toLocaleString();
 
@@ -1984,7 +2479,7 @@ async function buildClose(){
   if(close.products.length===0){
     const div = document.createElement("div");
     div.className="muted";
-    div.textContent = "Sin ventas.";
+    div.textContent = "Sin ventas en este rango.";
     cp.appendChild(div);
   }else{
     for(const p of close.products.slice(0,50)){
@@ -1994,6 +2489,103 @@ async function buildClose(){
       cp.appendChild(div);
     }
   }
+}
+
+async function saveClose(){
+  if(!state.lastClose) return alert("Primero genera el cierre.");
+  // Guardar el cierre requiere código (para evitar alteraciones)
+  if(!requireCode("guardar cierre")) return;
+
+  const c = {...state.lastClose};
+  c.id = "C-" + c.ts + "-" + Math.random().toString(16).slice(2,8);
+  await idbPut("closes", c);
+  await renderSavedCloses();
+  alert("Cierre guardado ✅");
+}
+
+async function renderSavedCloses(){
+  const dateKey = $("closeDate").value || todayKey();
+  const all = await idbAll("closes");
+  const list = all.filter(x=>x.dateKey===dateKey).sort((a,b)=>b.ts-a.ts);
+
+  const tb = $("closeSavedBody");
+  tb.innerHTML = "";
+  for(const c of list){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><small>${escapeHtml(c.dateKey)}</small><br><small>${escapeHtml(new Date(c.ts).toLocaleString())}</small></td>
+      <td><b>${escapeHtml(c.fromHHMM||"")}</b> - <b>${escapeHtml(c.toHHMM||"")}</b></td>
+      <td>${escapeHtml(String(c.salesCount||0))}</td>
+      <td>${money(c.total||0)}</td>
+      <td>
+        <button class="btn small" data-viewclose="${escapeHtml(c.id)}">Ver</button>
+        <button class="btn danger small" data-delclose="${escapeHtml(c.id)}">Borrar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+}
+
+async function viewSavedClose(id){
+  const c = await idbGet("closes", id);
+  if(!c) return;
+  state.lastClose = c;
+  // cargar inputs (sin tocar los reales)
+  $("closeDate").value = c.dateKey;
+  $("closeFrom").value = c.fromHHMM;
+  $("closeTo").value = c.toHHMM;
+
+  $("realCash").value = c.real?.EFECTIVO ?? 0;
+  $("realCard").value = c.real?.TARJETA ?? 0;
+  $("realTrans").value = c.real?.TRANSFERENCIA ?? 0;
+
+  // render ticket / difs
+  $("diffCash").textContent = money(c.diff?.EFECTIVO||0);
+  $("diffCard").textContent = money(c.diff?.TARJETA||0);
+  $("diffTrans").textContent = money(c.diff?.TRANSFERENCIA||0);
+  $("diffTotal").textContent = money(c.diffTotal||0);
+
+  // pintar ticket cierre como en buildClose:
+  $("cShop").textContent = c.shop;
+  $("cMeta").textContent = `Cierre • ${c.fromHHMM}-${c.toHHMM}`;
+  $("cDate").textContent = c.dateKey;
+  $("cTime").textContent = new Date(c.ts).toLocaleString();
+
+  $("cSales").textContent = String(c.salesCount);
+  $("cMost").textContent = String(c.mostradorCount);
+  $("cEnv").textContent = String(c.envioCount);
+
+  $("cCash").textContent = money(c.pay?.EFECTIVO||0);
+  $("cCard").textContent = money(c.pay?.TARJETA||0);
+  $("cTrans").textContent = money(c.pay?.TRANSFERENCIA||0);
+
+  $("cSub").textContent = money(c.subtotal||0);
+  $("cDisc").textContent = money(c.discounts||0);
+  $("cTotal").textContent = money(c.total||0);
+
+  const cp = $("cProducts");
+  cp.innerHTML = "";
+  if((c.products||[]).length===0){
+    const div = document.createElement("div");
+    div.className="muted";
+    div.textContent = "Sin ventas en este rango.";
+    cp.appendChild(div);
+  }else{
+    for(const p of (c.products||[]).slice(0,50)){
+      const div = document.createElement("div");
+      div.className="line";
+      div.innerHTML = `<span>${p.qty} x ${escapeHtml(p.name)}</span><span><small>${escapeHtml(p.code)}</small></span>`;
+      cp.appendChild(div);
+    }
+  }
+}
+
+async function deleteSavedClose(id){
+  if(!requireCode("borrar cierre")) return;
+  if(!confirm("¿Borrar cierre guardado?")) return;
+  await idbDel("closes", id);
+  await renderSavedCloses();
+  alert("Cierre borrado.");
 }
 
 async function copyClose(){
@@ -2025,7 +2617,7 @@ async function downloadClosePNG(){
 
   if(window.html2canvas){
     try{
-      await capturePNG(node, `cierre_${state.lastClose.dateKey}.png`);
+      await capturePNG(node, `cierre_${state.lastClose.dateKey}_${state.lastClose.fromHHMM.replace(":","")}-${state.lastClose.toHHMM.replace(":","")}.png`, 2);
       return;
     }catch(e){
       // sigue al aviso abajo
@@ -2040,12 +2632,14 @@ async function exportJSON(){
   const clients = await idbAll("clients");
   const products= await idbAll("products");
   const sales   = await idbAll("sales");
+  const shipments = await idbAll("shipments");
+  const closes = await idbAll("closes");
   const meta    = await idbAll("meta");
 
   const data = {
     exportedAt: new Date().toISOString(),
     settings: state.settings,
-    clients, products, sales, meta
+    clients, products, sales, shipments, closes, meta
   };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const a = document.createElement("a");
@@ -2064,6 +2658,8 @@ async function importJSON(file){
   if(data.clients) for(const c of data.clients) await idbPut("clients", c);
   if(data.products)for(const p of data.products) await idbPut("products", p);
   if(data.sales)   for(const s of data.sales) await idbPut("sales", s);
+  if(data.shipments) for(const s of data.shipments) await idbPut("shipments", s);
+  if(data.closes) for(const c of data.closes) await idbPut("closes", c);
   if(data.meta)    for(const m of data.meta) await idbPut("meta", m);
 
   if(data.settings) state.settings = data.settings;
@@ -2075,9 +2671,11 @@ async function importJSON(file){
   renderInventory();
   renderClients();
   renderReport("daily");
+  renderShipments();
   updateReceiptPreview();
   buildClose();
   syncDiscUI();
+  renderSavedCloses();
   alert("Backup importado.");
 }
 
@@ -2085,14 +2683,25 @@ async function refreshKPIs(){
   const clients = await idbAll("clients");
   const products= await idbAll("products");
   const sales   = await idbAll("sales");
+  const shipments = await idbAll("shipments");
   const tKey = todayKey(Date.now());
   const today = sales.filter(s=>s.dateKey===tKey);
   const total = today.reduce((a,s)=>a+Number(s.total||0),0);
+
+  const pending = shipments.filter(s=> (s.status||"PENDIENTE")==="PENDIENTE").length;
 
   $("kClients").textContent = clients.length;
   $("kProducts").textContent = products.length;
   $("kSalesToday").textContent = today.length;
   $("kTotalToday").textContent = money(total);
+  $("kShipPending").textContent = pending;
+}
+
+function sanitizeSettings(){
+  if(state.settings.envPngWidth===undefined) state.settings.envPngWidth = 360;
+  if(state.settings.envPngScale===undefined) state.settings.envPngScale = 2;
+  if(state.settings.envPdfWidthMM===undefined) state.settings.envPdfWidthMM = 80;
+  if(state.settings.envPdfMarginMM===undefined) state.settings.envPdfMarginMM = 6;
 }
 
 async function loadSettings(){
@@ -2102,18 +2711,52 @@ async function loadSettings(){
   if(state.settings.autoPDF===undefined) state.settings.autoPDF = true;
   if(state.settings.autoPNG===undefined) state.settings.autoPNG = true;
 
+  sanitizeSettings();
+
   $("sShopName").value = state.settings.shopName || "Tienda de Ropa";
   $("sAutoPDF").value = state.settings.autoPDF ? "1" : "0";
   $("sAutoPNG").value = state.settings.autoPNG ? "1" : "0";
+
+  $("sEnvPngWidth").value = state.settings.envPngWidth;
+  $("sEnvPngScale").value = state.settings.envPngScale;
+  $("sEnvPdfWidth").value = state.settings.envPdfWidthMM;
+  $("sEnvPdfMargin").value = state.settings.envPdfMarginMM;
+
   $("rShop").textContent = state.settings.shopName || "Tienda de Ropa";
   $("cShop").textContent = state.settings.shopName || "Tienda de Ropa";
 }
 
 async function saveSettings(){
+  const prev = {...state.settings};
+
   const shopName = $("sShopName").value.trim() || "Tienda de Ropa";
+  const autoPDF = $("sAutoPDF").value==="1";
+  const autoPNG = $("sAutoPNG").value==="1";
+
+  const envPngWidth = Number($("sEnvPngWidth").value||360);
+  const envPngScale = Number($("sEnvPngScale").value||2);
+  const envPdfWidthMM = Number($("sEnvPdfWidth").value||80);
+  const envPdfMarginMM = Number($("sEnvPdfMargin").value||6);
+
+  // Si cambian tamaños ENVÍO, pedimos código 363534
+  const advancedChanged =
+    Number(prev.envPngWidth||360) !== envPngWidth ||
+    Number(prev.envPngScale||2) !== envPngScale ||
+    Number(prev.envPdfWidthMM||80) !== envPdfWidthMM ||
+    Number(prev.envPdfMarginMM||6) !== envPdfMarginMM;
+
+  if(advancedChanged){
+    if(!requireCode("cambiar tamaños de impresión (ENVÍO)")) return;
+  }
+
   state.settings.shopName = shopName;
-  state.settings.autoPDF = $("sAutoPDF").value==="1";
-  state.settings.autoPNG = $("sAutoPNG").value==="1";
+  state.settings.autoPDF = autoPDF;
+  state.settings.autoPNG = autoPNG;
+
+  state.settings.envPngWidth = Math.max(260, Math.min(520, envPngWidth));
+  state.settings.envPngScale = Math.max(1, Math.min(4, envPngScale));
+  state.settings.envPdfWidthMM = Math.max(50, Math.min(120, envPdfWidthMM));
+  state.settings.envPdfMarginMM = Math.max(0, Math.min(20, envPdfMarginMM));
 
   await idbPut("meta",{key:"settings", value: state.settings});
   alert("Ajustes guardados.");
@@ -2155,9 +2798,57 @@ function wireEvents(){
   $("invSearch").addEventListener("input", ()=>{ if(state.view==="inventory") renderInventory(); });
   $("btnInvRefresh").addEventListener("click", renderInventory);
 
+  // Shipments
+  $("shipSearch").addEventListener("input", renderShipments);
+  $("shipFilter").addEventListener("change", renderShipments);
+  $("btnShipRefresh").addEventListener("click", renderShipments);
+  $("shipBody").addEventListener("click", async (e)=>{
+    const view = e.target.closest("button[data-viewship]");
+    const pay  = e.target.closest("button[data-payship]");
+    const pend = e.target.closest("button[data-pendship]");
+    const del  = e.target.closest("button[data-delship]");
+
+    if(view){
+      const id = view.dataset.viewship;
+      const s = await idbGet("shipments", id);
+      if(s){
+        state.lastReceipt = s;
+        updateReceiptPreview();
+        setView("pos");
+        alert("Envío cargado en vista POS. Puedes generar WhatsApp/PDF/PNG. (No cuenta como venta hasta PAGADO)");
+      }
+    }
+    if(pay){
+      await markShipmentPaid(pay.dataset.payship);
+    }
+    if(pend){
+      await markShipmentPending(pend.dataset.pendship);
+      await renderShipments();
+    }
+    if(del){
+      await deleteShipment(del.dataset.delship);
+    }
+  });
+
   // Cierre
   $("btnBuildClose").addEventListener("click", async ()=>{ await buildClose(); alert("Cierre generado ✅"); });
-  $("closeDate").addEventListener("change", ()=>{ if(state.view==="close") buildClose(); });
+  $("btnSaveClose").addEventListener("click", saveClose);
+  $("closeDate").addEventListener("change", async ()=>{ if(state.view==="close"){ await buildClose(); await renderSavedCloses(); } });
+  $("closeFrom").addEventListener("change", ()=>{ if(state.view==="close") buildClose(); });
+  $("closeTo").addEventListener("change", ()=>{ if(state.view==="close") buildClose(); });
+
+  ["realCash","realCard","realTrans"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{ if(state.view==="close") buildClose(); });
+  });
+
+  $("btnCloseListRefresh").addEventListener("click", renderSavedCloses);
+  $("closeSavedBody").addEventListener("click", async (e)=>{
+    const v = e.target.closest("button[data-viewclose]");
+    const d = e.target.closest("button[data-delclose]");
+    if(v) await viewSavedClose(v.dataset.viewclose);
+    if(d) await deleteSavedClose(d.dataset.delclose);
+  });
+
   $("btnCloseCopy").addEventListener("click", copyClose);
   $("btnClosePDF").addEventListener("click", generateClosePDF);
   $("btnClosePNG").addEventListener("click", downloadClosePNG);
@@ -2357,6 +3048,7 @@ function wireEvents(){
         await idbDel("sales", id);
         await refreshKPIs();
         renderReport("daily");
+        buildClose();
       }
     }
   });
@@ -2419,6 +3111,8 @@ function wireEvents(){
 
   // fecha default cierre
   $("closeDate").value = todayKey();
+  $("closeFrom").value = "00:00";
+  $("closeTo").value = "23:59";
 
   setView("pos");
 
@@ -2428,6 +3122,8 @@ function wireEvents(){
 
   updateReceiptPreview();
   buildClose();
+  renderShipments();
+  renderSavedCloses();
 })();
 </script>
 </body>
