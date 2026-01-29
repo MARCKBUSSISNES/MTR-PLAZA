@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>MYT ONLINE ATLANTIC PLAZA</title>
+  <title>MT ROPA ONLINE ATLANTIC PLAZA</title>
 
   <style>
     :root{
-      --bg:#fff4fb;
-      --panel:#ffffff;
-      --panel2:rgba(255,255,255,.78);
-      --text:#241b2a;
-      --muted:#7a6b78;
+      --bg:#000000;
+      --panel:#e09898;
+      --panel2:rgba(192, 191, 255, 0.905);
+      --text:#000000;
+      --muted:#94b4ff;
 
       --pink:#ff4fb7;
       --purple:#a855f7;
@@ -30,7 +30,7 @@
 
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
 
-      --focus: 0 0 0 4px rgba(255,79,183,.15);
+      --focus: 0 0 0 4px rgba(255, 79, 182, 0.332);
     }
 
     *{ box-sizing:border-box; }
@@ -83,7 +83,7 @@
       top: 14px;
       align-self: start;
       height: calc(100vh - 28px);
-      background: linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(255,247,252,.92) 100%);
+      background: linear-gradient(180deg, rgba(230, 7, 193, 0.92) 0%, rgba(0, 0, 0, 0.92) 100%);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -118,7 +118,7 @@
     .hamburger{
       width:42px;height:42px;border-radius:16px;
       border:1px solid var(--border);
-      background:#fff;
+      background:#000000;
       cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       box-shadow: 0 10px 22px rgba(17,10,20,.07);
@@ -159,7 +159,7 @@
     }
     .nav button:hover{
       transform: translateY(-1px);
-      box-shadow: 0 16px 30px rgba(20,10,25,.09);
+      box-shadow: 0 16px 30px rgba(164, 86, 204, 0.09);
     }
     .nav button .tag{
       font-weight:1000;
@@ -238,7 +238,7 @@
       border-radius: 16px;
       background:#fff;
       border:1px solid var(--border);
-      box-shadow: 0 10px 22px rgba(17,10,20,.06);
+      box-shadow: 0 10px 22px rgba(135, 77, 160, 0.06);
       color:var(--text);
       transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
     }
@@ -372,6 +372,7 @@
     .kpi .value span{ font-size:12px; color:var(--muted); font-weight:1000 }
 
     .hide{ display:none !important; }
+.hidden{ display:none !important; }
 
     /* Receipt */
     .receiptWrap{ display:flex; gap:12px; flex-wrap:wrap; }
@@ -454,12 +455,12 @@
 </head>
 <body>
   <div class="sparkle"></div>
-
+<div class="menuOverlay" id="menuOverlay"></div>
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div>
-          <h1>MYT ONLINE <small>ATLANTIC PLAZA</small></h1>
+          <h1>MTR ONLINE <small>ATLANTIC PLAZA</small></h1>
         </div>
         <button class="hamburger" id="btnToggle" title="Menú">
           <div class="burger"><span></span><span></span><span></span></div>
@@ -473,7 +474,8 @@
         <button data-view="reports"><span>📊 Reportes</span><span class="tag">D/W/M</span></button>
         <button data-view="products"><span>🧷 Productos</span><span class="tag">SKU</span></button>
         <button data-view="inventory"><span>📦 Inventarios</span><span class="tag">STOCK</span></button>
-        <button data-view="close"><span>🧾 Cierres</span><span class="tag">DÍA</span></button>
+        <button data-view="kardex"><span>📊</span><b>Kardex</b><i>Movimientos</i></button>
+<button data-view="close"><span>🧾 Cierres</span><span class="tag">DÍA</span></button>
         <button data-view="settings"><span>⚙️ Ajustes</span><span class="tag">LOCAL</span></button>
       </div>
 
@@ -497,8 +499,9 @@
           <p id="viewSub">Soporte tecnico tel: 58140-621</p>
         </div>
         <div class="actions">
-          <button class="btn small" id="btnBackup">Exportar JSON</button>
-          <button class="btn small" id="btnRestore">Importar JSON</button>
+          <button class="btn small" id="btnBackup">Exportar Back Up</button>
+          <button class="btn small" id="btnRestore">Importar Back Up</button>
+	  <button id="btnPickBackupFolder">📁 Elegir carpeta de Backups</button>
         </div>
       </div>
 
@@ -572,7 +575,7 @@
                   <option value="Q">DESCUENTO (Q)</option>
                   <option value="PCT">DESCUENTO (%)</option>
                 </select>
-                <input id="discValue" type="number" min="0" step="0.01" value="0" style="max-width:160px" />
+               <input id="discValue" type="number" min="0" step="0.01" value="0" style="max-width:160px">
                 <button class="btn" id="btnApplyDisc">Aplicar</button>
                 <button class="btn danger" id="btnClearDisc">Quitar</button>
               </div>
@@ -659,7 +662,7 @@
 
             <div class="receiptWrap" style="margin-top:12px">
               <div class="receipt" id="receiptBox">
-                <img class="cornerLogo" src="LOGO1.png" alt="Logo" />
+                <img class="cornerLogo" src="data:," onerror="this.style.display='none'" alt="Logo" />
                 <div class="logo">
                   <div>
                     <b id="rShop">Tienda de Ropa</b>
@@ -764,6 +767,31 @@
             <button class="btn" id="btnRepWeekly">Semana</button>
             <button class="btn" id="btnRepMonthly">Mes</button>
           </div>
+	 <div class="card" style="margin-top:12px">
+  <h3 style="margin:0 0 10px 0">🕒 Rango (Fecha + Hora)</h3>
+  <div class="rowflex">
+    <div class="field" style="min-width:180px">
+      <label>Desde (fecha)</label>
+      <input id="repFromDate" type="date">
+    </div>
+    <div class="field" style="min-width:160px">
+      <label>Desde (hora)</label>
+      <input id="repFromTime" type="time" value="00:00">
+    </div>
+    <div class="field" style="min-width:180px">
+      <label>Hasta (fecha)</label>
+      <input id="repToDate" type="date">
+    </div>
+    <div class="field" style="min-width:160px">
+      <label>Hasta (hora)</label>
+      <input id="repToTime" type="time" value="23:59">
+    </div>
+    <button class="btn primary" id="btnRepRange">Aplicar rango</button>
+  </div>
+  <div class="muted" style="margin-top:8px">
+    Filtra ventas PAGADAS entre dos fechas/horas exactas.
+  </div>
+</div>
 
           <div class="totals" style="margin-top:12px">
             <div class="kpi">
@@ -874,6 +902,51 @@
           </div>
         </div>
       </section>
+<section class="view hide" id="view-kardex">
+  <div class="panel">
+    <h2 style="margin:0 0 10px">Kardex perpetuo</h2>
+    <div class="grid2">
+      <div class="field">
+        <label>Buscar (código / nombre)</label>
+        <input id="kSearch" class="input" placeholder="Ej: blusa, 12345..." />
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <select id="kType" class="input">
+          <option value="">Todos</option>
+          <option value="INGRESO">INGRESO</option>
+          <option value="AJUSTE">AJUSTE</option>
+          <option value="SALIDA">SALIDA</option>
+          <option value="ENTRADA">ENTRADA</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel2" style="margin-top:12px; overflow:auto">
+      <table class="tbl" style="min-width:860px">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Código</th>
+            <th>Producto</th>
+            <th style="text-align:right">Cantidad</th>
+            <th style="text-align:right">Stock</th>
+            <th>Ref</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody id="kBody"></tbody>
+      </table>
+    </div>
+
+    <div class="row" style="margin-top:12px; gap:10px; flex-wrap:wrap">
+      <button class="btn" id="btnKRefresh">Actualizar</button>
+      <button class="btn danger" id="btnKClear" title="Esto borra el kardex (NO recomendado)">Borrar kardex</button>
+    </div>
+  </div>
+</section>
+
 
       <!-- CLOSE VIEW -->
       <section id="view-close" class="hide">
@@ -994,7 +1067,7 @@
 
             <div class="receiptWrap" style="margin-top:12px">
               <div class="receipt" id="closeBox">
-                <img class="cornerLogo" src="LOGO1.png" alt="Logo" />
+                <img class="cornerLogo" src="data:," onerror="this.style.display='none'" alt="Logo" />
                 <div class="logo">
                   <div>
                     <b id="cShop">Tienda de Ropa</b>
@@ -1115,8 +1188,9 @@
 ============================================================ */
 
 const DB_NAME = "pos_boutique_offline_v1";
-const DB_VER = 4; // subimos versión
+const DB_VER = 8; // bumped for movements+kardex // subimos versión
 let db;
+let appReady = false; // evita clicks antes de que IndexedDB esté lista
 
 const state = {
   view: "pos",
@@ -1124,7 +1198,7 @@ const state = {
   selectedClient: null,
   lastReceipt: null,  // puede ser venta o envío (pending/paid)
   lastClose: null,
-  discount: { type:"NONE", value:0 },
+  discount: { type:"Q", value:0 },
   settings: {
     shopName: "Tienda de Ropa",
     autoPDF:true,
@@ -1135,9 +1209,96 @@ const state = {
     envPdfMarginMM: 6
   }
 };
-
+state.backup = {
+  dirHandle: null,
+  enabled: true
+};
 const $ = (id)=>document.getElementById(id);
+// Sincroniza UI de descuentos con el estado actual
+function syncDiscUI(){
+  const d = state.discount || {type:"NONE", value:0};
+  const typeEl = $("discType");
+  const valEl  = $("discValue");
+  if(typeEl) typeEl.value = d.type || "NONE";
+
+  // Si no hay descuento, dejamos vacío para que no moleste
+  if(valEl){
+    if(!d.type || d.type==="NONE") valEl.value = "";
+    else valEl.value = String(d.value ?? 0);
+    valEl.disabled = (!d.type || d.type==="NONE");
+  }
+}
+
 const money = (n)=> "Q" + (Number(n||0)).toFixed(2);
+// ---------- Cart math + UI ----------
+function calcSubtotal(){
+  return (state.cart||[]).reduce((sum,it)=> sum + (Number(it.price||0) * Number(it.qty||0)), 0);
+}
+function calcDiscount(){
+  const sub = calcSubtotal();
+  const d = state.discount || { type:"NONE", value:0 };
+  if(d.type === "Q"){
+    const v = Math.max(0, Number(d.value||0));
+    return Math.min(sub, v);
+  }
+  if(d.type === "PCT"){
+    const p = Math.max(0, Number(d.value||0));
+    return sub * (p/100);
+  }
+  return 0;
+}
+function calcGrand(){
+  return Math.max(0, calcSubtotal() - calcDiscount());
+}
+// -------- Compat helpers (evita errores por funciones renombradas) --------
+function cartSubtotal(){ return calcSubtotal(); }
+function cartDiscountAmount(){ return calcDiscount(); }
+function cartTotal(){ return calcGrand(); }
+// Alias usado por paneles antiguos
+const idbGetAll = idbAll;
+
+function renderCart(){
+  const tbody = $("cartBody");
+  if(!tbody) return;
+
+  const cart = state.cart || [];
+  if(!cart.length){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">Carrito vacío</td></tr>`;
+  }else{
+    tbody.innerHTML = cart.map(it=>{
+      const qty = Number(it.qty||0);
+      const price = Number(it.price||0);
+      const line = qty * price;
+      const code = String(it.code||"");
+      const name = String(it.name||"");
+      return `
+        <tr>
+          <td class="qty">
+            <button class="mini" data-act="minus" data-code="${code}">−</button>
+            <span class="q">${qty}</span>
+            <button class="mini" data-act="plus" data-code="${code}">+</button>
+          </td>
+          <td class="name">
+            <div class="t">${name}</div>
+            <div class="s muted">${code}</div>
+          </td>
+          <td class="price">${money(price)}</td>
+          <td class="line">${money(line)}</td>
+          <td class="act">
+            <button class="mini danger" data-act="del" data-code="${code}">✕</button>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  // Totales
+  const subEl = $("subTotal"); if(subEl) subEl.textContent = money(calcSubtotal());
+  const discEl = $("discTotal"); if(discEl) discEl.textContent = money(calcDiscount());
+  const grandEl = $("grandTotal"); if(grandEl) grandEl.textContent = money(calcGrand());
+
+  // Refresca recibo / previsualización
+  if(typeof updateReceiptPreview === "function") updateReceiptPreview();
+}
 
 // ---------- IndexedDB ----------
 function openDB(){
@@ -1171,7 +1332,15 @@ function openDB(){
         s.createIndex("dateKey", "dateKey", { unique:false });
       }
 
-      if(!db.objectStoreNames.contains("meta")){
+      
+      // NUEVO: movements (kardex perpetuo)
+      if(!db.objectStoreNames.contains("movements")){
+        const s = db.createObjectStore("movements", { keyPath:"id" });
+        s.createIndex("ts", "ts", { unique:false });
+        s.createIndex("code", "code", { unique:false });
+      }
+
+if(!db.objectStoreNames.contains("meta")){
         db.createObjectStore("meta", { keyPath:"key" });
       }
     };
@@ -1181,6 +1350,9 @@ function openDB(){
 }
 
 function tx(store, mode="readonly"){
+  if(!db){
+    throw new Error("DB no está lista todavía (db undefined). Recarga la página y espera 1-2 segundos.");
+  }
   return db.transaction(store, mode).objectStore(store);
 }
 function idbGet(store, key){
@@ -1221,6 +1393,99 @@ function idbClearAll(){
     new Promise((res,rej)=>{ const r=db.transaction("meta","readwrite").objectStore("meta").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
   ]);
 }
+
+
+// ---------- Movements (Kardex) ----------
+function mkMoveId(){
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+async function logMovement(mv){
+  // mv: {type, code, name, qty, stockAfter, refType, refId, note}
+  const row = {
+    id: mkMoveId(),
+    ts: Date.now(),
+    type: mv.type || "MOV",
+    code: mv.code || "",
+    name: mv.name || "",
+    qty: Number(mv.qty||0),
+    stockAfter: (mv.stockAfter===undefined? null : Number(mv.stockAfter)),
+    refType: mv.refType || "",
+    refId: mv.refId || "",
+    note: mv.note || ""
+  };
+  await idbPut("movements", row);
+}
+async function getShiftStartTs(){
+  const m = await idbGet("meta","shiftStartTs");
+  return m?.value ? Number(m.value) : null;
+}
+
+async function setShiftStartTs(ts){
+  await idbPut("meta", { key:"shiftStartTs", value: Number(ts||Date.now()) });
+}
+async function clearAllShipments(){
+  // borra SOLO shipments
+  return new Promise((res, rej)=>{
+    const r = db.transaction("shipments","readwrite").objectStore("shipments").clear();
+    r.onsuccess = ()=>res(true);
+    r.onerror = ()=>rej(r.error);
+  });
+}
+function toLocalTs(dateStr, timeStr){
+  const d = String(dateStr||"").trim();
+  const t = String(timeStr||"00:00").trim();
+  if(!d) return null;
+  // "YYYY-MM-DDTHH:MM" en local
+  const dt = new Date(`${d}T${t}:00`);
+  const ts = dt.getTime();
+  return Number.isFinite(ts) ? ts : null;
+}
+
+async function renderReportRange(){
+  const all = await idbAll("sales");
+
+  const fd = $("repFromDate")?.value || todayKey();
+  const ft = $("repFromTime")?.value || "00:00";
+  const td = $("repToDate")?.value || fd;
+  const tt = $("repToTime")?.value || "23:59";
+
+  const a = toLocalTs(fd, ft);
+  const b = toLocalTs(td, tt);
+  if(a===null || b===null) return alert("Rango inválido. Revisa fechas/horas.");
+
+  const start = Math.min(a,b);
+  const end   = Math.max(a,b);
+
+  const list = all.filter(s => {
+    const ts = Number(s.ts||0);
+    return ts >= start && ts <= end;
+  });
+
+  const total = list.reduce((sum,s)=> sum + Number(s.total||0), 0);
+  $("repCount").textContent = list.length;
+  $("repTotal").textContent = money(total);
+
+  const tb = $("salesBody");
+  tb.innerHTML = "";
+  for(const s of list.sort((x,y)=>Number(y.ts||0)-Number(x.ts||0))){
+    const when = new Date(s.ts).toLocaleString();
+    const c = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><small>${escapeHtml(when)}</small><br><small>#${escapeHtml(s.receiptNo||"")}</small></td>
+      <td>${escapeHtml(c)}<br><small>${escapeHtml(s.saleType||"")}</small></td>
+      <td>${escapeHtml(s.payMethod||"")}</td>
+      <td>${money(s.total)}</td>
+      <td>
+        <button class="btn small" data-viewsale="${escapeHtml(s.id)}">Ver</button>
+        <button class="btn danger small" data-delsale="${escapeHtml(s.id)}">Borrar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+}
+
+
 
 // ---------- Helpers ----------
 function todayKey(ts=Date.now()){
@@ -1269,11 +1534,22 @@ function isWithinDateRange(ts, dateKey, fromHHMM, toHHMM){
   // rango normal (no cruzando medianoche)
   return mins >= a && mins <= b;
 }
+async function clearStore(store){
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(store, "readwrite");
+    const os = tx.objectStore(store);
+    const r = os.clear();
+
+    r.onsuccess = () => res(true);
+    r.onerror   = () => rej(r.error);
+  });
+}
 
 // ---------- UI Nav ----------
 const views = {
   pos: {title:"Cobro (POS)", sub:""},
   shipments: {title:"Envíos pendientes", sub:"Gestión de envíos: PENDIENTE/PAGADO."},
+  kardex: {title:"Kardex", sub:"Movimientos perpetuos de inventario (entradas y salidas)."},
   clients: {title:"Clientes", sub:"Busca por teléfono, edita y usa para envíos."},
   reports: {title:"Reportes", sub:"Diario / Semanal / Mensual con historial de ventas (solo pagadas)."},
   products: {title:"Productos", sub:"Agrega productos con código, nombre, precio y stock."},
@@ -1283,79 +1559,62 @@ const views = {
 };
 
 function setView(v){
+  // Robust: evita crasheos si llega un data-view inexistente
+  if(!v || !views[v]){
+    console.warn("Vista desconocida:", v);
+    return;
+  }
+
   state.view = v;
-  $("viewTitle").textContent = views[v].title;
-  $("viewSub").textContent = views[v].sub;
 
-  for(const k of Object.keys(views)){
-    $("view-"+k).classList.toggle("hide", k!==v);
-  }
-  [...document.querySelectorAll(".nav button")].forEach(b=>{
-    b.classList.toggle("active", b.dataset.view===v);
-  });
+  const tEl = $("viewTitle");
+  const sEl = $("viewSub");
+  if(tEl) tEl.textContent = views[v].title || "";
+  if(sEl) sEl.textContent = views[v].sub || "";
 
-  if(v==="clients") renderClients();
-  if(v==="products") { renderProducts(); refreshProductPicker(); }
-  if(v==="reports") renderReport("daily");
-  if(v==="inventory") renderInventory();
-  if(v==="close") buildClose();
-  if(v==="shipments") renderShipments();
-}
-
-// ---------- Descuentos ----------
-function cartSubtotal(){
-  return state.cart.reduce((a,x)=>a + x.qty*x.price, 0);
-}
-function cartDiscountAmount(subtotal = cartSubtotal()){
-  const t = state.discount?.type || "NONE";
-  const v = Number(state.discount?.value || 0);
-  if(!v || v<=0 || t==="NONE") return 0;
-  if(t==="Q") return Math.min(v, subtotal);
-  if(t==="PCT") return Math.min(subtotal, subtotal * (v/100));
-  return 0;
-}
-function cartTotal(){
-  const sub = cartSubtotal();
-  const disc = cartDiscountAmount(sub);
-  return Math.max(sub - disc, 0);
-}
-function syncDiscUI(){
-  $("discType").value = state.discount?.type || "NONE";
-  $("discValue").value = String(state.discount?.value ?? 0);
-}
-
-// ---------- Cart ----------
-function renderCart(){
-  const body = $("cartBody");
-  body.innerHTML = "";
-
-  let subtotal = 0;
-  for(const item of state.cart){
-    const line = item.qty * item.price;
-    subtotal += line;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${item.qty}</td>
-      <td>${escapeHtml(item.name)}<br><small>${escapeHtml(item.code)}</small></td>
-      <td>${money(item.price)}</td>
-      <td>${money(line)}</td>
-      <td>
-        <button class="btn small" data-act="minus" data-code="${escapeHtml(item.code)}">-</button>
-        <button class="btn small" data-act="plus" data-code="${escapeHtml(item.code)}">+</button>
-        <button class="btn danger small" data-act="del" data-code="${escapeHtml(item.code)}">X</button>
-      </td>
-    `;
-    body.appendChild(tr);
+  // Mostrar/ocultar vistas solo si existen en el DOM
+  for(const k in views){
+    const el = $("view-"+k);
+    if(el) el.classList.toggle("hide", k !== v);
   }
 
-  const disc = cartDiscountAmount(subtotal);
-  const total = Math.max(subtotal - disc, 0);
+  // Acciones al entrar en ciertas vistas
+  if(v==="kardex"){ renderKardex(); }
+  if(v==="shipments"){ renderShipments(); }
+  if(v==="products"){ renderProducts(); }
+  if(v==="clients"){ renderClients(); }
+  if(v==="inventory"){ renderInventory(); }
 
-  $("subTotal").textContent = money(subtotal);
-  $("discTotal").textContent = money(disc);
-  $("grandTotal").textContent = money(total);
-  updateReceiptPreview();
+  // ✅ AQUÍ el cambio
+  if(v==="reports"){
+    const t = todayKey();
+
+    if($("repFromDate")) $("repFromDate").value = t;
+    if($("repToDate"))   $("repToDate").value   = t;
+
+    if($("repFromTime")) $("repFromTime").value = "00:00";
+    if($("repToTime"))   $("repToTime").value   = "23:59";
+
+    renderReports();
+  }
+
+  if(v==="close"){ renderClosePanel(); }
+
+  // POS Totales
+  if(v==="pos"){
+    const subtotal = calcSubtotal();
+    const disc = calcDiscount();
+    const total = Math.max(0, subtotal - disc);
+
+    const st = $("subTotal");
+    const dt = $("discTotal");
+    const gt = $("grandTotal");
+    if(st) st.textContent = money(subtotal);
+    if(dt) dt.textContent = money(disc);
+    if(gt) gt.textContent = money(total);
+
+    updateReceiptPreview();
+  }
 }
 
 function cartAdd(product, qty=1){
@@ -1456,6 +1715,22 @@ async function saveProductFromForm(){
     updatedAt: Date.now()
   };
   await idbPut("products", product);
+  // Kardex: registra cambio de stock (ingreso/ajuste)
+  {
+    const prev = exists ? Number(exists.stock||0) : 0;
+    const delta = Number(stock) - prev;
+    if(delta !== 0){
+      await logMovement({
+        type: (delta>0 ? "INGRESO" : "AJUSTE"),
+        code, name,
+        qty: delta,
+        stockAfter: stock,
+        refType: "PRODUCTO",
+        refId: code,
+        note: exists ? "Edición de stock" : "Alta de producto"
+      });
+    }
+  }
   alert("Producto guardado.");
   $("pCode").value=""; $("pName").value=""; $("pPrice").value=""; $("pStock").value="";
   await refreshKPIs();
@@ -1532,6 +1807,57 @@ async function renderInventory(){
   }
 }
 
+
+// ---------- Kardex UI ----------
+async function renderKardex(){
+  const q = ($("kSearch")?.value || "").trim().toLowerCase();
+  const t = ($("kType")?.value || "").trim();
+
+  let rows = await idbGetAll("movements");
+  rows.sort((a,b)=>(b.ts||0)-(a.ts||0));
+
+  if(t) rows = rows.filter(r=>String(r.type||"")===t);
+  if(q){
+    rows = rows.filter(r=>{
+      const code = String(r.code||"").toLowerCase();
+      const name = String(r.name||"").toLowerCase();
+      const note = String(r.note||"").toLowerCase();
+      return code.includes(q) || name.includes(q) || note.includes(q);
+    });
+  }
+
+  const body = $("kBody");
+  if(!body) return;
+  body.innerHTML = rows.map(r=>{
+    const dt = new Date(r.ts||0);
+    const f = dt.toLocaleString("es-GT");
+    const qty = Number(r.qty||0);
+    const qtyTxt = (qty>0? `+${qty}` : String(qty));
+    const stockTxt = (r.stockAfter===null || r.stockAfter===undefined) ? "" : String(r.stockAfter);
+    const ref = [r.refType, r.refId].filter(Boolean).join(": ");
+    return `
+      <tr>
+        <td>${escapeHtml(f)}</td>
+        <td><b>${escapeHtml(String(r.type||""))}</b></td>
+        <td>${escapeHtml(String(r.code||""))}</td>
+        <td>${escapeHtml(String(r.name||""))}</td>
+        <td style="text-align:right">${escapeHtml(qtyTxt)}</td>
+        <td style="text-align:right">${escapeHtml(stockTxt)}</td>
+        <td>${escapeHtml(ref)}</td>
+        <td>${escapeHtml(String(r.note||""))}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function clearKardex(){
+  if(!confirm("¿Seguro? Esto borrará TODOS los movimientos del kardex.")) return;
+  await clearStore("movements");
+  await renderKardex();
+}
+
+
+
 // ---------- Sales / Shipments / Checkout ----------
 async function nextReceiptNo(){
   const meta = await idbGet("meta","receiptNo");
@@ -1560,22 +1886,44 @@ async function validateStockForCart(){
   return {ok:true};
 }
 
-async function deductStockForCart(){
+async function deductStockForCart(refType="VENTA", refId="", note=""){
   for(const it of state.cart){
     const p = await getProductByCode(it.code);
     p.stock = Number(p.stock||0) - it.qty;
     p.updatedAt = Date.now();
     await idbPut("products", p);
+    // Kardex: salida por venta/envío
+    await logMovement({
+      type: "SALIDA",
+      code: it.code,
+      name: p.name || it.name || "",
+      qty: -Number(it.qty||0),
+      stockAfter: p.stock,
+      refType: refType,
+      refId: refId,
+      note: note || (refType==="ENVIO" ? "Envío" : "Venta")
+    });
   }
 }
 
-async function restoreStockForItems(items){
+async function restoreStockForItems(items, refType="", refId="", note=""){
   for(const it of (items||[])){
     const p = await getProductByCode(it.code);
     if(!p) continue;
     p.stock = Number(p.stock||0) + Number(it.qty||0);
     p.updatedAt = Date.now();
     await idbPut("products", p);
+    // Kardex: entrada por devolución/anulación
+    await logMovement({
+      type: "ENTRADA",
+      code: it.code,
+      name: p.name || it.name || "",
+      qty: Number(it.qty||0),
+      stockAfter: p.stock,
+      refType: refType,
+      refId: refId,
+      note: note || "Restock"
+    });
   }
 }
 
@@ -1600,7 +1948,7 @@ async function checkout(){
   if(!st.ok) return alert(st.msg);
 
   // Opción A: ENVIÓ descuenta stock al crear el envío pendiente (lo que tú elegiste).
-  await deductStockForCart();
+  await deductStockForCart(saleType, receiptNo, "Venta");
 
   const client = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
 
@@ -1630,6 +1978,7 @@ async function checkout(){
 
     await idbPut("shipments", shipment);
     state.lastReceipt = shipment;
+ await autoBackupToFolder("envio_pendiente");
 
     // reset carrito + descuento
     state.discount = {type:"NONE", value:0};
@@ -1673,6 +2022,7 @@ async function checkout(){
 
   await idbPut("sales", sale);
   state.lastReceipt = sale;
+  await autoBackupToFolder("venta");
 
   // reset carrito + descuento
   state.discount = {type:"NONE", value:0};
@@ -1685,8 +2035,17 @@ async function checkout(){
   updateReceiptPreview();
 
   // Auto descargas
-  if(state.settings.autoPDF) setTimeout(()=>{ try{ generatePDF(); }catch(e){} }, 200);
-  if(state.settings.autoPNG) setTimeout(()=>{ try{ downloadReceiptPNG(); }catch(e){} }, 700);
+ // Auto descargas (solo para MOSTRADOR, no para ENVÍOS)
+if(sale.saleType !== "ENVIO"){
+  if(state.settings.autoPDF) setTimeout(()=>{
+    try{ generatePDF(); }catch(e){}
+  }, 200);
+
+  if(state.settings.autoPNG) setTimeout(()=>{
+    try{ downloadReceiptPNG(); }catch(e){}
+  }, 700);
+}
+
 
   alert("Venta registrada. Recibo listo para WhatsApp/PDF/PNG.");
 }
@@ -1730,7 +2089,6 @@ async function renderShipments(){
       <td>
         <button class="btn small" data-viewship="${escapeHtml(s.id)}">Ver</button>
         <button class="btn ok small" data-payship="${escapeHtml(s.id)}">Marcar PAGADO</button>
-        <button class="btn small" data-pendship="${escapeHtml(s.id)}">Marcar PEND.</button>
         <button class="btn danger small" data-delship="${escapeHtml(s.id)}">Borrar</button>
       </td>
     `;
@@ -1773,6 +2131,7 @@ async function markShipmentPaid(id){
   };
 
   await idbPut("sales", sale);
+await autoBackupToFolder("envio_pagado");
 
   // Actualizar envío a PAGADO (mantener, para historial)
   s.status = "PAGADO";
@@ -1790,26 +2149,8 @@ async function markShipmentPaid(id){
   alert("Envío marcado como PAGADO. Ya cuenta como venta en Reportes y Cierres.");
 }
 
-async function markShipmentPending(id){
-  const s = await idbGet("shipments", id);
-  if(!s) return alert("Envío no encontrado.");
-  if((s.status||"PENDIENTE")==="PENDIENTE"){
-    alert("Ya está PENDIENTE.");
-    return;
-  }
+// (removido) botón pendiente eliminado
 
-  // Si ya tenía venta creada, NO la borramos automáticamente para no romper historiales;
-  // Mejor avisamos.
-  if(s.saleId){
-    alert("Este envío ya generó una venta. Si quieres revertirlo, borra la venta en Reportes (con código) y luego marca pendiente.");
-  }
-
-  s.status = "PENDIENTE";
-  await idbPut("shipments", s);
-  await refreshKPIs();
-  if(state.view==="shipments") renderShipments();
-  updateReceiptPreview();
-}
 
 async function deleteShipment(id){
   if(!requireCode("borrar envío")) return;
@@ -2052,28 +2393,181 @@ async function capturePNG(node, filename, scaleOverride=null){
     document.body.classList.remove("capture-mode");
   }
 }
+// ====== LABEL 10x10 (ENVÍO) helpers ======
+const ENV_LABEL_MM = 100;                 // 10cm
+const ENV_LABEL_MARGIN_MM = 3;            // margen impresión (ajusta si tu impresora lo necesita)
+const ENV_LABEL_PX = Math.round(ENV_LABEL_MM * 96 / 25.4); // 100mm -> ~378px (a 96dpi)
+
+/** Construye un nodo 10x10 para ENVÍO (para PNG) */
+function buildEnvLabelNode(s){
+  const wrap = document.createElement("div");
+  wrap.id = "envLabelTmp";
+  wrap.style.width = ENV_LABEL_PX + "px";
+  wrap.style.height = ENV_LABEL_PX + "px";
+  wrap.style.background = "#fff";
+  wrap.style.position = "fixed";
+  wrap.style.left = "-99999px";
+  wrap.style.top = "0";
+  wrap.style.padding = "10px";
+  wrap.style.boxSizing = "border-box";
+  wrap.style.border = "1px solid rgba(0,0,0,.08)";
+  wrap.style.overflow = "hidden";
+  wrap.style.fontFamily = "Arial, sans-serif";
+
+  const d = new Date(s.ts || Date.now()).toLocaleString();
+  const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
+  const phone = s.client?.phone || "—";
+  const addr  = s.client?.addr || "—";
+  const status = s.status || "PENDIENTE";
+
+  const items = (s.items||[]).map(it=>{
+    const line = (it.qty||0) * (it.price||0);
+    return `
+      <tr>
+        <td style="width:34px;text-align:center;font-weight:700;">${it.qty}</td>
+        <td style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(it.name)}</td>
+        <td style="width:62px;text-align:right;font-weight:700;">${money(line)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const sub  = Number(s.subtotal ?? 0);
+  const disc = Number(s.discountAmount ?? 0);
+  const tot  = Number(s.total ?? 0);
+
+  wrap.innerHTML = `
+    <div class="L" style="height:100%;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:900;color:#111;line-height:1.05;">
+            ${escapeHtml(s.shop || state.settings.shopName || "Tienda")}
+          </div>
+          <div style="font-size:11px;font-weight:800;color:#333;">
+            ENVÍO • #${escapeHtml(s.receiptNo||"")}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;font-weight:900;color:${status==="PAGADO" ? "#0e5b2a" : "#7a4b00"};">
+            ${status==="PAGADO" ? "✅ PAGADO" : "⏳ PENDIENTE"}
+          </div>
+          <div style="font-size:9.5px;font-weight:700;color:#444;">${escapeHtml(d)}</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px dashed rgba(0,0,0,.25);padding-top:6px;">
+        <div style="font-size:10.5px;font-weight:900;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          👤 ${escapeHtml(client)}
+        </div>
+        <div style="font-size:10px;font-weight:800;color:#333;">
+          📞 ${escapeHtml(phone)}
+        </div>
+        <div style="
+          font-size:10px;font-weight:800;color:#333;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+          overflow:hidden;line-height:1.15;
+        ">
+          📍 ${escapeHtml(addr)}
+        </div>
+      </div>
+
+      <div style="border-top:1px solid rgba(0,0,0,.10);padding-top:6px;flex:1;min-height:0;overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="font-size:9.5px;text-align:center;border-bottom:1px solid rgba(0,0,0,.10);padding-bottom:4px;">Cant</th>
+              <th style="font-size:9.5px;text-align:left;border-bottom:1px solid rgba(0,0,0,.10);padding-bottom:4px;">Producto</th>
+              <th style="font-size:9.5px;text-align:right;border-bottom:1px solid rgba(0,0,0,.10);padding-bottom:4px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items || `<tr><td colspan="3" style="font-size:10px;padding-top:6px;">Sin items</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="border-top:1px solid rgba(0,0,0,.10);padding-top:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:10.5px;font-weight:900;">
+          <span>SUB</span><span>${money(sub)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10.5px;font-weight:900;">
+          <span>DESC</span><span>${money(disc)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:1000;">
+          <span>TOTAL</span><span>${money(tot)}</span>
+        </div>
+        <div style="margin-top:2px;font-size:9.5px;font-weight:800;color:#444;">
+          Pago: ${escapeHtml(s.payMethod||"")}
+        </div>
+      </div>
+    </div>
+  `;
+
+  return wrap;
+}
+
+/** Reduce tamaño de letra hasta que el contenido quepa en 10x10 */
+function fitEnvLabelToBox(node){
+  // bajamos font-size global del contenedor hasta que no desborde
+  let fs = 12; // arranque
+  node.style.fontSize = fs + "px";
+
+  // intentamos hasta 6px
+  for(let i=0;i<20;i++){
+    // si desborda, bajamos
+    if(node.scrollHeight > node.clientHeight || node.scrollWidth > node.clientWidth){
+      fs -= 0.5;
+      node.style.fontSize = fs + "px";
+      if(fs <= 6) break;
+    }else{
+      break;
+    }
+  }
+}
 
 
 // PNG (preferir html2canvas; fallback SVG)
+// PNG (preferir html2canvas; fallback SVG)
 async function downloadReceiptPNG(){
+  const s = state.lastReceipt || makeLiveReceipt();
+  const isEnv = (s.saleType === "ENVIO");
+
+  // ====== ENVÍO: PNG 10x10 usando label temporal ======
+  if(isEnv){
+    if(!window.html2canvas){
+      alert("html2canvas no está disponible. Usa PDF.");
+      return;
+    }
+
+    const node = buildEnvLabelNode(s);
+    document.body.appendChild(node);
+    fitEnvLabelToBox(node);
+
+    try{
+      const scale = Number(state.settings.envPngScale || 2);
+      await capturePNG(node, `envio_${(s.receiptNo||"----")}_10x10.png`, scale);
+    }catch(e){
+      alert("No se pudo generar PNG de ENVÍO. Intenta con PDF. " + (e?.message||""));
+    }finally{
+      node.remove();
+    }
+    return;
+  }
+
+  // ====== MOSTRADOR: PNG desde #receiptBox ======
   const node = $("receiptBox");
   if(!node) return;
 
-  const s = state.lastReceipt || makeLiveReceipt();
-  const isEnv = (s.saleType === "ENVIO");
-  const scale = isEnv ? Number(state.settings.envPngScale||2) : 2;
-
-  // 1) html2canvas robusto (evita PNG en blanco / opaco)
+  // 1) html2canvas robusto
   if(window.html2canvas){
     try{
-      await capturePNG(node, `recibo_${(s.receiptNo||"----")}.png`, scale);
+      await capturePNG(node, `recibo_${(s.receiptNo||"----")}.png`, 2);
       return;
     }catch(e){
-      // fallback abajo
+      // seguimos al fallback
     }
   }
 
-  // 2) fallback SVG foreignObject (si el navegador bloquea canvas)
+  // 2) fallback SVG foreignObject
   const w = node.offsetWidth;
   const h = node.offsetHeight;
 
@@ -2102,12 +2596,14 @@ async function downloadReceiptPNG(){
   const img = new Image();
   img.onload = ()=>{
     const cnv = $("cnv");
-    const sc = Math.max(1, Math.min(4, scale));
+    const sc = 2;
     cnv.width = w*sc;
     cnv.height = h*sc;
+
     const ctx = cnv.getContext("2d");
-    ctx.scale(sc,sc);
-    ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
+    ctx.setTransform(sc,0,0,sc,0,0);
+    ctx.fillStyle="#fff";
+    ctx.fillRect(0,0,w,h);
     ctx.drawImage(img, 0,0);
     URL.revokeObjectURL(url);
 
@@ -2151,17 +2647,22 @@ function receiptToPrintableHTML(s){
   const total = Number(s.total ?? 0);
 
   const isEnv = (s.saleType === "ENVIO");
-  const pageW = isEnv ? Number(state.settings.envPdfWidthMM||80) : null;
-  const pageM = isEnv ? Number(state.settings.envPdfMarginMM||6) : 10;
 
-  // CSS: cuando es ENVÍO aplicamos @page width mm para impresora térmica
+  const pageW = ENV_LABEL_MM;        // 100mm
+  const pageH = ENV_LABEL_MM;        // 100mm
+  const pageM = ENV_LABEL_MARGIN_MM; // 3mm
+
   const pageCss = isEnv
-    ? `@page{ size: ${pageW}mm auto; margin: ${pageM}mm; }`
+    ? `@page{ size: ${pageW}mm ${pageH}mm; margin: ${pageM}mm; }`
     : `@page{ margin: 12mm; }`;
 
-  const boxWidth = isEnv ? `max-width: ${Math.max(50,Math.min(120,pageW))}mm;` : `max-width: 820px;`;
+  const boxWidth = isEnv
+    ? `max-width: ${Math.max(50, Math.min(120, pageW))}mm;`
+    : `max-width: 820px;`;
 
-  const statusLine = s.status ? `<div class="meta" style="margin-top:6px;color:#a16207;font-weight:900">Estatus: ${escapeHtml(s.status)}</div>` : ``;
+  const statusLine = s.status
+    ? `<div class="meta" style="margin-top:6px;color:#a16207;font-weight:900">Estatus: ${escapeHtml(s.status)}</div>`
+    : ``;
 
   return `
   <!doctype html>
@@ -2170,6 +2671,7 @@ function receiptToPrintableHTML(s){
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Recibo ${escapeHtml(s.receiptNo || "")}</title>
+
     <style>
       ${pageCss}
       body{ font-family: Arial, sans-serif; margin: 0; color:#111; background:#fff7fb; }
@@ -2187,15 +2689,77 @@ function receiptToPrintableHTML(s){
       th{ background:#ffe4f1; text-align:left; }
       .totalRow{ display:flex; justify-content:space-between; margin-top:10px; font-weight:900; font-size:14px; }
       .foot{ margin-top:12px; color:#444; font-size:12px; font-weight:700; }
+
       @media print{
         body{ background:#fff; }
         .box{ border:none; border-radius:0; }
       }
     </style>
+
+    <script>
+      // Ajusta el contenido SOLO para ENVÍO (10x10) bajando font-size si se desborda
+      (function(){
+        var IS_ENV = ${isEnv ? "true" : "false"};
+
+        function fit(){
+          if(!IS_ENV) return;
+
+          var box = document.querySelector('.box');
+          if(!box) return;
+
+          // Si no hay una altura real, no intentes medir
+          if(box.clientHeight === 0 || box.clientWidth === 0) return;
+
+          var fs = 12;
+          box.style.fontSize = fs + 'px';
+
+          for(var i=0;i<40;i++){
+            var overflowH = box.scrollHeight > box.clientHeight;
+            var overflowW = box.scrollWidth  > box.clientWidth;
+
+            if(overflowH || overflowW){
+              fs -= 0.5;
+              box.style.fontSize = fs + 'px';
+              if(fs <= 6) break;
+            }else{
+              break;
+            }
+          }
+        }
+
+window.addEventListener('load', function(){
+  // 2 pasadas para asegurar layout + imágenes
+  if(typeof fit === "function"){
+    fit();
+    setTimeout(fit, 150);
+    setTimeout(fit, 350);
+  }
+
+  // Botón para elegir carpeta de backups
+  const btnPick = document.getElementById("btnPickBackupFolder");
+  if(btnPick){
+    btnPick.addEventListener("click", async function(){
+      try{
+        await pickBackupFolder();
+      }catch(err){
+        console.error(err);
+        alert("No se pudo abrir el selector de carpeta. Usa Chrome/Edge y abre en https/localhost.\n\nDetalle: " + (err?.message || err));
+      }
+    });
+  }else{
+    // Solo para debug
+    console.warn("No existe #btnPickBackupFolder al cargar (puede estar en otra vista).");
+  }
+});
+
+
+      })();
+    <\/script>
   </head>
+
   <body onload="setTimeout(function(){window.print();},250)">
     <div class="box">
-      <img class="cornerLogo" src="LOGO1.png" alt="Logo" />
+      <img class="cornerLogo" src="data:," onerror="this.style.display='none'" alt="Logo" />
       <div class="bar"></div>
       <h1>${escapeHtml(s.shop || "Tienda de Ropa")} — Recibo #${escapeHtml(s.receiptNo || "")}</h1>
       <div class="meta">${escapeHtml(d)} • Tipo: ${escapeHtml(s.saleType || "MOSTRADOR")} • Pago: ${escapeHtml(s.payMethod || "EFECTIVO")}</div>
@@ -2238,6 +2802,7 @@ function receiptToPrintableHTML(s){
   </html>
   `;
 }
+
 
 function generatePDF(){
   const s = state.lastReceipt || makeLiveReceipt();
@@ -2306,24 +2871,96 @@ function closeToPrintableHTML(c){
     <title>Cierre ${escapeHtml(c.dateKey)}</title>
     <style>
       body{ font-family: Arial, sans-serif; margin: 20px; color:#111; background:#fff7fb; }
-      .box{ position:relative; max-width: 820px; margin: 0 auto; border:2px solid #fbcfe8; border-radius:16px; padding:16px; background:#fff; }
-      .cornerLogo{ position:absolute; top:12px; right:12px; width:60px; height:60px; object-fit:contain; border-radius:14px; border:1px solid #eee; padding:4px; background:#fff; }
-      .bar{ height:8px; border-radius:999px; background: linear-gradient(90deg, #ff4fb7, #a855f7); margin-bottom:12px; }
-      h1{ margin:0; font-size:18px; color:#7b2fb4; padding-right:70px; }
-      .meta{ margin-top:4px; color:#444; font-size:12px; font-weight:700; }
-      .line{ display:flex; justify-content:space-between; gap:12px; font-weight:800; margin:6px 0; }
-      table{ width:100%; border-collapse:collapse; margin-top:14px; }
-      th,td{ border-bottom:1px solid #eee; padding:8px; font-size:13px; }
-      th{ background:#ffe4f1; text-align:left; }
-      @media print{
-        body{ margin:0; }
-        .box{ border:none; border-radius:0; }
-      }
+     <style>
+  body{ 
+    font-family: Arial, sans-serif; 
+    margin: 20px; 
+    color:#111; 
+    background:#fff7fb; 
+  }
+
+  .box{
+    position:relative;
+    width:100mm;
+    height:100mm;
+    overflow:hidden;
+    margin:0 auto;
+    border:2px solid #fbcfe8;
+    border-radius:16px;
+    padding:10px;
+    background:#fff;
+    box-sizing:border-box;
+  }
+
+  .cornerLogo{ 
+    position:absolute; 
+    top:12px; 
+    right:12px; 
+    width:60px; 
+    height:60px; 
+    object-fit:contain; 
+    border-radius:14px; 
+    border:1px solid #eee; 
+    padding:4px; 
+    background:#fff; 
+  }
+
+  .bar{ 
+    height:8px; 
+    border-radius:999px; 
+    background: linear-gradient(90deg, #ff4fb7, #a855f7); 
+    margin-bottom:12px; 
+  }
+
+  h1{ 
+    margin:0; 
+    font-size:18px; 
+    color:#7b2fb4; 
+    padding-right:70px; 
+  }
+
+  .meta{ 
+    margin-top:4px; 
+    color:#444; 
+    font-size:12px; 
+    font-weight:700; 
+  }
+
+  .line{ 
+    display:flex; 
+    justify-content:space-between; 
+    gap:12px; 
+    font-weight:800; 
+    margin:6px 0; 
+  }
+
+  table{ 
+    width:100%; 
+    border-collapse:collapse; 
+    margin-top:14px; 
+  }
+
+  th,td{ 
+    border-bottom:1px solid #eee; 
+    padding:8px; 
+    font-size:13px; 
+  }
+
+  th{ 
+    background:#ffe4f1; 
+    text-align:left; 
+  }
+
+  @media print{
+    body{ margin:0; }
+    .box{ border:none; border-radius:0; }
+  }
+
     </style>
   </head>
   <body onload="setTimeout(function(){window.print();},250)">
     <div class="box">
-      <img class="cornerLogo" src="LOGO1.png" alt="Logo" />
+      <img class="cornerLogo" src="data:," onerror="this.style.display='none'" alt="Logo" />
       <div class="bar"></div>
       <h1>${escapeHtml(c.shop)} — Cierre ${escapeHtml(c.dateKey)} (${escapeHtml(c.fromHHMM)}-${escapeHtml(c.toHHMM)})</h1>
       <div class="meta">Generado: ${escapeHtml(new Date(c.ts).toLocaleString())}</div>
@@ -2493,15 +3130,24 @@ async function buildClose(){
 
 async function saveClose(){
   if(!state.lastClose) return alert("Primero genera el cierre.");
-  // Guardar el cierre requiere código (para evitar alteraciones)
   if(!requireCode("guardar cierre")) return;
 
   const c = {...state.lastClose};
   c.id = "C-" + c.ts + "-" + Math.random().toString(16).slice(2,8);
   await idbPut("closes", c);
+
+  await clearAllShipments();
   await renderSavedCloses();
+
+  await autoBackupToFolder("cierre"); // ya lo tienes ✅
+
+  // ✅ reset por turno
+  await setShiftStartTs(Date.now());
+  await refreshKPIs();
+
   alert("Cierre guardado ✅");
 }
+
 
 async function renderSavedCloses(){
   const dateKey = $("closeDate").value || todayKey();
@@ -2627,20 +3273,21 @@ async function downloadClosePNG(){
 }
 
 
-// ---------- Backup / Restore / Settings / KPIs ----------
 async function exportJSON(){
-  const clients = await idbAll("clients");
-  const products= await idbAll("products");
-  const sales   = await idbAll("sales");
+  const clients   = await idbAll("clients");
+  const products  = await idbAll("products");
+  const sales     = await idbAll("sales");
   const shipments = await idbAll("shipments");
-  const closes = await idbAll("closes");
-  const meta    = await idbAll("meta");
+  const closes    = await idbAll("closes");
+  const meta      = await idbAll("meta");
+  const movements = await idbAll("movements"); // ✅ NUEVO
 
   const data = {
     exportedAt: new Date().toISOString(),
     settings: state.settings,
-    clients, products, sales, shipments, closes, meta
+    clients, products, sales, shipments, closes, meta, movements
   };
+
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -2661,7 +3308,7 @@ async function importJSON(file){
   if(data.shipments) for(const s of data.shipments) await idbPut("shipments", s);
   if(data.closes) for(const c of data.closes) await idbPut("closes", c);
   if(data.meta)    for(const m of data.meta) await idbPut("meta", m);
-
+  if(data.movements) for(const m of data.movements) await idbPut("movements", m);
   if(data.settings) state.settings = data.settings;
 
   await loadSettings();
@@ -2678,23 +3325,118 @@ async function importJSON(file){
   renderSavedCloses();
   alert("Backup importado.");
 }
+async function pickBackupFolder(){
+  if(!window.showDirectoryPicker){
+    alert("Tu navegador no soporta carpeta automática. Usa Chrome/Edge.");
+    return;
+  }
+  // Evita: NotAllowedError: File picker already active
+  if(!window.state) window.state = {};
+  state._uiLocks = state._uiLocks || {};
+  if(state._uiLocks.pickBackupFolder) return;
+  state._uiLocks.pickBackupFolder = true;
+
+  try{
+    const handle = await window.showDirectoryPicker();
+    if(!handle) return;
+    state.backup = state.backup || {};
+    state.backup.dirHandle = handle;
+    alert("Carpeta de backups configurada ✅");
+  }catch(err){
+    // AbortError = el usuario cerró/canceló el diálogo (no es problema)
+    if(err && (err.name === "AbortError" || err.message?.includes("aborted"))){
+      // silencioso
+    } else if(err && err.name === "NotAllowedError"){
+      // si sigue ocurriendo, suele ser doble click; ya lo bloqueamos arriba
+      console.warn("No permitido abrir selector de carpeta:", err);
+    } else {
+      console.error(err);
+      alert("No se pudo seleccionar la carpeta. Intenta de nuevo.");
+    }
+  }finally{
+    state._uiLocks.pickBackupFolder = false;
+  }
+}
+async function autoBackupToFolder(tag="auto"){
+  try{
+    if(!state.backup?.enabled) return;
+
+    // Si no hay carpeta elegida, hacemos fallback a descarga normal
+    if(!state.backup?.dirHandle){
+      await exportJSON();
+      return;
+    }
+
+    const clients   = await idbAll("clients");
+    const products  = await idbAll("products");
+    const sales     = await idbAll("sales");
+    const shipments = await idbAll("shipments");
+    const closes    = await idbAll("closes");
+    const meta      = await idbAll("meta");
+    const movements = await idbAll("movements");
+
+    const data = {
+      exportedAt: new Date().toISOString(),
+      tag,
+      settings: state.settings,
+      clients, products, sales, shipments, closes, meta, movements
+    };
+
+    const ts = new Date();
+    const name =
+      `backup_${tag}_` +
+      ts.getFullYear() +
+      String(ts.getMonth()+1).padStart(2,"0") +
+      String(ts.getDate()).padStart(2,"0") + "_" +
+      String(ts.getHours()).padStart(2,"0") +
+      String(ts.getMinutes()).padStart(2,"0") +
+      String(ts.getSeconds()).padStart(2,"0") +
+      ".json";
+
+    const fileHandle = await state.backup.dirHandle.getFileHandle(name, { create:true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(new Blob([JSON.stringify(data,null,2)], {type:"application/json"}));
+    await writable.close();
+  }catch(e){
+    console.warn("AutoBackup falló:", e);
+    // fallback a descarga
+    try{ await exportJSON(); }catch(_){}
+  }
+}
+
 
 async function refreshKPIs(){
   const clients = await idbAll("clients");
   const products= await idbAll("products");
   const sales   = await idbAll("sales");
   const shipments = await idbAll("shipments");
-  const tKey = todayKey(Date.now());
-  const today = sales.filter(s=>s.dateKey===tKey);
-  const total = today.reduce((a,s)=>a+Number(s.total||0),0);
+
+  const now = Date.now();
+  let shiftStart = await getShiftStartTs();
+
+  // Si no existe turno aún, lo inicializamos al inicio del día
+  if(!shiftStart){
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    shiftStart = d.getTime();
+    await setShiftStartTs(shiftStart);
+  }
+
+  // Ventas del TURNO = desde shiftStart hasta ahora
+  const turnoSales = sales.filter(s => Number(s.ts||0) >= shiftStart && Number(s.ts||0) <= now);
+  const total = turnoSales.reduce((a,s)=>a+Number(s.total||0),0);
 
   const pending = shipments.filter(s=> (s.status||"PENDIENTE")==="PENDIENTE").length;
 
-  $("kClients").textContent = clients.length;
-  $("kProducts").textContent = products.length;
-  $("kSalesToday").textContent = today.length;
-  $("kTotalToday").textContent = money(total);
-  $("kShipPending").textContent = pending;
+  const kClients = $("kClients"); if(kClients) kClients.textContent = clients.length;
+  const kProducts= $("kProducts"); if(kProducts) kProducts.textContent = products.length;
+  const kSalesToday = $("kSalesToday"); if(kSalesToday) kSalesToday.textContent = turnoSales.length;
+  const kTotalToday = $("kTotalToday"); if(kTotalToday) kTotalToday.textContent = money(total);
+  const kShipPending= $("kShipPending"); if(kShipPending) kShipPending.textContent = pending;
+
+  // Opcional: cambia el título visual del panel para que diga TURNO ACTUAL
+  const pill = document.querySelector(".sidecard .pill");
+  if(pill) pill.textContent = "💗 TUS VENTAS TURNO ACTUAL";
 }
 
 function sanitizeSettings(){
@@ -2763,13 +3505,134 @@ async function saveSettings(){
   updateReceiptPreview();
   buildClose();
 }
+function getClientDraftFromForm(){
+  const phone = $("cPhone")?.value?.trim() || "";
+  const names = $("cNames")?.value?.trim() || "";
+  const last  = $("cLast")?.value?.trim() || "";
+  const addr  = $("cAddr")?.value?.trim() || "";
+
+  if(!(phone || names || last || addr)) return null; // nada escrito
+  return { phone, names, last, addr };
+}
+
+function syncClientDraftLive(){
+  const draft = getClientDraftFromForm();
+
+  // En ENVIO: el recibo SIEMPRE debe reflejar lo escrito
+  // En MOSTRADOR: si escribes algo, también lo reflejamos
+  state.selectedClient = draft;
+
+  updateReceiptPreview();
+}
+
 
 // ---------- Events ----------
 function wireEvents(){
+  if(!window.state) window.state = {};
+  if(state._wired) return; // evita doble enlace de eventos
+  state._wired = true;
+  // Helpers (safe binding)
+  const on = (id, ev, fn)=>{ const el = $(id); if(el) el.addEventListener(ev, fn); };
+  const onClick = (id, fn)=>on(id, 'click', fn);
+// Descuento (corrige IDs aquí (robusto)
+  // En este sistema el input se llama: id="discValue"
+  // Si mañana cambias el id, solo agrega el nuevo aquí.
+  const discInput = $("discValue") || $("discountValue") || $("descuento") || $("discount");
+  if(!discInput){
+    // No es crítico: solo no habrá descuento manual desde UI
+    // (evitamos warnings ruidosos en consola)
+  } else {
+    const safeRecalc = ()=>{
+      try{
+        if(typeof recalcCartTotals === "function") recalcCartTotals();
+        if(typeof calcTotals === "function") calcTotals();
+      }catch(_){}
+    };
+    discInput.addEventListener("input", ()=>{
+      const v = Number(discInput.value || 0);
+      // soporta ambos formatos: state.discount.value o state.discount
+      if(!window.state) window.state = {};
+      if(typeof state.discount === "object" && state.discount){
+        state.discount.value = v;
+      } else {
+        state.discount = { value: v };
+      }
+      safeRecalc();
+      if(typeof updateReceiptPreview === "function") updateReceiptPreview();
+    });
+  }
+  // ====== HAMBURGER / SIDEBAR TOGGLE ======
+  const isMobile = ()=> window.matchMedia("(max-width: 980px)").matches;
+
+  function applySavedMenuState(){
+    const saved = localStorage.getItem("mt_sidebar_collapsed");
+    if(saved === "1") document.body.classList.add("sidebar-collapsed");
+    else document.body.classList.remove("sidebar-collapsed");
+  }
+  applySavedMenuState();
+
+  function closeMobileSidebar(){
+    document.body.classList.remove("sidebar-open");
+  }
+
+  onClick("btnToggle", ()=>{
+    // Mobile: abre/cierra drawer
+    if(isMobile()){
+      document.body.classList.toggle("sidebar-open");
+      return;
+    }
+    // Desktop: colapsa/expande sidebar
+    document.body.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("mt_sidebar_collapsed", document.body.classList.contains("sidebar-collapsed") ? "1" : "0");
+  });
+
+  // Overlay click (solo móvil)
+  onClick("menuOverlay", closeMobileSidebar);
+
+  // Si tocas un botón del menú, en móvil cerramos el drawer
+  const nav = $("nav");
+  if(nav){
+    nav.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-view]");
+      if(btn && isMobile()) closeMobileSidebar();
+    });
+  }
+
+  // Escape para cerrar en móvil
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") closeMobileSidebar();
+  });
+
+  // Al cambiar tamaño, limpia estados cruzados
+  window.addEventListener("resize", ()=>{
+    if(!isMobile()){
+      document.body.classList.remove("sidebar-open");
+    }
+  });
+
+  // 📁 Elegir carpeta de Backups
+  onClick("btnPickBackupFolder", async ()=>{
+    try{
+      await pickBackupFolder();
+    }catch(e){
+      console.error(e);
+      alert("No se pudo abrir el selector de carpeta.\nUsa Chrome o Edge y abre el sistema en https o localhost.");
+    }
+  });
+$("btnRepDaily").addEventListener("click", ()=>renderReport("daily"));
+$("btnRepWeekly").addEventListener("click", ()=>renderReport("weekly"));
+$("btnRepMonthly").addEventListener("click", ()=>renderReport("monthly"));
+
+const btnRange = $("btnRepRange");
+if(btnRange){
+  btnRange.addEventListener("click", renderReportRange);
+}
+
   // Nav
   $("nav").addEventListener("click",(e)=>{
     const btn = e.target.closest("button[data-view]");
     if(!btn) return;
+    if(!appReady) return;
     setView(btn.dataset.view);
   });
 
@@ -2779,20 +3642,20 @@ function wireEvents(){
   });
 
   // Descuento
-  $("btnApplyDisc").addEventListener("click", ()=>{
-    const type = $("discType").value;
-    const value = Number($("discValue").value||0);
-    if(type==="NONE"){ state.discount = {type:"NONE", value:0}; syncDiscUI(); renderCart(); return; }
-    if(value<0) return alert("Descuento inválido.");
-    if(type==="PCT" && value>100) return alert("Porcentaje máximo 100%.");
-    state.discount = {type, value};
-    renderCart();
-  });
-  $("btnClearDisc").addEventListener("click", ()=>{
-    state.discount = {type:"NONE", value:0};
-    syncDiscUI();
-    renderCart();
-  });
+onClick("btnApplyDisc", ()=>{
+  const type = $("discType").value;
+  const value = Number($("discValue").value||0);
+  state.discount = { type, value };
+  syncDiscUI();
+  renderCart();
+});
+
+onClick("btnClearDisc", ()=>{
+  state.discount = { type:"NONE", value:0 };
+  syncDiscUI();
+  renderCart();
+});
+
 
   // Inventory
   $("invSearch").addEventListener("input", ()=>{ if(state.view==="inventory") renderInventory(); });
@@ -2945,12 +3808,13 @@ function wireEvents(){
     updateReceiptPreview();
   });
 
-  $("saleType").addEventListener("change", ()=>{
-    if($("saleType").value==="ENVIO"){
-      $("cPhone").focus();
-    }
-    updateReceiptPreview();
-  });
+$("saleType").addEventListener("change", ()=>{
+  if($("saleType").value==="ENVIO"){
+    $("cPhone").focus();
+  }
+  syncClientDraftLive(); // refresca usando lo escrito
+});
+
 
   $("payMethod").addEventListener("change", updateReceiptPreview);
 
@@ -3024,9 +3888,10 @@ function wireEvents(){
   });
 
   // Reports actions
-  $("btnRepDaily").addEventListener("click", ()=>renderReport("daily"));
-  $("btnRepWeekly").addEventListener("click", ()=>renderReport("weekly"));
-  $("btnRepMonthly").addEventListener("click", ()=>renderReport("monthly"));
+ onClick("btnRepDaily", ()=>renderReport("daily"));
+onClick("btnRepWeekly", ()=>renderReport("weekly"));
+onClick("btnRepMonthly", ()=>renderReport("monthly"));
+
 
   $("salesBody").addEventListener("click", async (e)=>{
     const view = e.target.closest("button[data-viewsale]");
@@ -3045,6 +3910,11 @@ function wireEvents(){
       if(!requireCode("borrar venta")) return;
       const id = del.dataset.delsale;
       if(confirm("¿Borrar venta?")){
+        // Restock al borrar venta (solo turno actual en UI, pero aplica al ticket borrado)
+        const sale = await idbGet("sales", id);
+        if(sale && Array.isArray(sale.items)){
+          await restoreStockForItems(sale.items, "VENTA", id, "Anulación de venta");
+        }
         await idbDel("sales", id);
         await refreshKPIs();
         renderReport("daily");
@@ -3072,59 +3942,94 @@ function wireEvents(){
     e.target.value="";
   });
 
-  // Live updates on receipt when typing client fields
-  ["cPhone","cNames","cLast","cAddr"].forEach(id=>{
-    $(id).addEventListener("input", ()=>{
-      if($("saleType").value==="ENVIO"){
-        const phone = $("cPhone").value.trim();
-        const names = $("cNames").value.trim();
-        const last  = $("cLast").value.trim();
-        const addr  = $("cAddr").value.trim();
-        state.selectedClient = (phone||names||last||addr) ? {phone,names,last,addr} : null;
-      }
-      updateReceiptPreview();
-    });
-  });
+  // Live updates on receipt while typing (EN TIEMPO REAL)
+["cPhone","cNames","cLast","cAddr"].forEach(id=>{
+  const el = $(id);
+  if(!el) return;
+  el.addEventListener("input", syncClientDraftLive);
+  el.addEventListener("change", syncClientDraftLive);
+});
 
   // Focus scan input by pressing F2
-  window.addEventListener("keydown",(e)=>{
-    if(e.key==="F2"){
-      e.preventDefault();
-      $("scanInput").focus();
-      $("scanInput").select();
-    }
-  });
+ window.addEventListener("keydown",(e)=>{
+  if(e.key === "F2"){
+    e.preventDefault();
+    const s = $("scanInput");
+    if(!s) return;
+    s.focus();
+    s.select();
+  }
+});
+
 
   // Settings save
-  $("btnSaveSettings").addEventListener("click", saveSettings);
+  const btnSave = $("btnSaveSettings");
+if(btnSave) btnSave.addEventListener("click", saveSettings);
+
+
+  // Kardex
+  onClick("btnKRefresh", renderKardex);
+  onClick("btnKClear", clearKardex);
+  ["kSearch","kType"].forEach(id=>{
+    const el=$(id);
+    if(!el) return;
+    el.addEventListener("input", ()=>renderKardex());
+    el.addEventListener("change", ()=>renderKardex());
+  });
+
 }
 
 // ---------- Init ----------
 (async function init(){
-  db = await openDB();
-  await loadSettings();
-  await refreshKPIs();
-  await refreshProductPicker();
-  renderCart();
-  syncDiscUI();
-  wireEvents();
+  // Importante: cablear eventos ANTES de cualquier operación async.
+  // Así, si IndexedDB falla, la UI sigue respondiendo y muestra errores al intentar acciones.
+  try{
+    // wireEvents(); // (desactivado: se llamaba 2 veces)
 
-  // fecha default cierre
-  $("closeDate").value = todayKey();
-  $("closeFrom").value = "00:00";
-  $("closeTo").value = "23:59";
+  }catch(e){
+    console.warn('wireEvents falló', e);
+  }
+  try{
+    db = await openDB();
+    appReady = true;
+    await loadSettings();
+    syncDiscUI();
+    renderCart();
+    await refreshKPIs();
+    await refreshProductPicker();
+    await renderProducts();
+    await renderInventory();
+    await renderClients();
+    await renderSavedCloses();
+    updateReceiptPreview();
 
-  setView("pos");
+    // Fecha por defecto en cierre
+    const cd = $("closeDate");
+    if(cd && !cd.value) cd.value = todayKey();
 
-  const meta = await idbGet("meta","receiptNo");
-  const n = meta?.value ? (meta.value-1) : 1;
-  $("rNo").textContent = "#"+pad(Math.max(1,n),6);
-
-  updateReceiptPreview();
-  buildClose();
-  renderShipments();
-  renderSavedCloses();
+    setView("pos");
+  }catch(err){
+    console.error(err);
+    alert("Error iniciando el sistema: " + (err?.message || err));
+  }
 })();
+(async function init(){
+  try{
+    db = await openDB();      // Abre IndexedDB
+    appReady = true;         // 🔥 Aquí habilitas la app
+
+    await loadSettings();
+    await refreshKPIs();
+    await refreshProductPicker();
+
+    wireEvents();            // Ahora sí conecta todos los botones
+    setView("pos");          // Entra directo al POS
+  }catch(err){
+    console.error(err);
+    alert("Error inicializando el sistema: " + err.message);
+  }
+})();
+
 </script>
 </body>
 </html>
