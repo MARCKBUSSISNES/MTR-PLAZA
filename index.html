@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>MTR ONLINE</title>
+  <title>MT ROPA ONLINE ATLANTIC PLAZA</title>
 
   <style>
     :root{
@@ -399,6 +399,19 @@
       border:1px solid rgba(0,0,0,.06);
       padding:4px;
     }
+      ${isEnv ? `
+      body{ background:#fff !important; color:#000 !important; }
+      .box{ border:2px solid #000 !important; background:#fff !important; }
+      .bar{ background:#000 !important; }
+      h1{ color:#000 !important; }
+      .meta{ color:#000 !important; font-weight:900 !important; }
+      th{ background:#fff !important; border-bottom:1px solid #000 !important; }
+      th,td{ border-bottom:1px solid #000 !important; color:#000 !important; }
+      .label{ color:#000 !important; font-weight:900 !important; }
+      .val{ color:#000 !important; font-weight:900 !important; }
+      .totalRow{ color:#000 !important; }
+      .cornerLogo{ border:1px solid #000 !important; }
+    ` : ""}
     @keyframes floatIn{
       from{ transform: translateY(10px) scale(.98); opacity:0; }
       to{ transform: translateY(0) scale(1); opacity:1; }
@@ -418,6 +431,12 @@
     .receipt .line span:last-child{ flex:1 1 auto; text-align:right; word-break:break-word; overflow-wrap:anywhere; }
     .receipt.envio .line{ font-size:11px; }
     .receipt.envio .big{ font-size:14px; }
+    .receipt.envio{ border:2px solid #000; }
+    .receipt.envio .hr{ background: rgba(0,0,0,.35); }
+    .receipt.envio .cornerLogo{
+      /* mantener mismo logo/tamaño del sitio; solo más contraste general se maneja por tipografía */
+      border:1px solid rgba(0,0,0,.06);
+    }
     .receipt .hr{ height:1px; background:rgba(0,0,0,.08); margin:10px 0 }
     .receipt .big{ font-size:16px; font-weight:1200; display:flex; justify-content:space-between; margin-top:10px; }
     .receipt .foot{ margin-top:10px; font-size:11px; color:#666; font-weight:900 }
@@ -644,6 +663,11 @@
                 <input id="cLast" placeholder="Ej: López"/>
               </div>
 
+              <div class="field">
+                <label>NIT</label>
+                <input id="cNit" placeholder="Ej: CF / 1234567-8"/>
+              </div>
+
               <div class="field full">
                 <label>Dirección</label>
                 <textarea id="cAddr" rows="3" placeholder="Ej: Col. X, casa #, zona..., referencias..."></textarea>
@@ -693,6 +717,7 @@
 
                 <div class="line"><span>Cliente</span><span id="rClient">MOSTRADOR</span></div>
                 <div class="line"><span>Teléfono</span><span id="rPhone">—</span></div>
+                <div class="line"><span>NIT</span><span id="rNit">—</span></div>
                 <div class="line"><span>Dirección</span><span id="rAddr">—</span></div>
                 <div class="line"><span>Indicaciones</span><span id="rIndic">—</span></div>
                 <div class="hr"></div>
@@ -1143,7 +1168,13 @@
               <input id="sShopName" placeholder="Ej: Boutique Karina"/>
             </div>
 
-            <div class="field">
+            
+            <div class="field full">
+              <label>Formas de pago (una por línea o separadas por coma)</label>
+              <textarea id="sPayMethods" rows="3" placeholder="EFECTIVO&#10;TARJETA&#10;TRANSFERENCIA"></textarea>
+              <div class="muted" style="margin-top:6px">Estas opciones aparecen en <b>Forma de pago</b> al vender.</div>
+            </div>
+<div class="field">
               <label>Auto PDF al cobrar</label>
               <select id="sAutoPDF">
                 <option value="1">SÍ</option>
@@ -1265,9 +1296,26 @@ async function getInlineLogoDataURL(){
   let data = localStorage.getItem(LOGO_DATAURL_KEY);
   if(data) return data;
 
+  // intento 0: si el logo YA está cargado en el DOM, lo convertimos a DataURL (funciona incluso en file:// en muchos navegadores)
+  try{
+    const img = document.getElementById("siteLogo") || document.querySelector(".cornerLogo") || document.querySelector("img[src*='LOGO']");
+    if(img && img.complete && img.naturalWidth>0){
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img,0,0);
+      const durl = c.toDataURL("image/png", 1.0);
+      if(durl && durl.startsWith("data:image")){
+        localStorage.setItem(LOGO_DATAURL_KEY, durl);
+        return durl;
+      }
+    }
+  }catch(e){ /* ignore */ }
+
   // intento 1: fetch LOGO1.png (funciona bien en http/https)
   try{
-    const resp = await fetch("LOGO1.png", {cache:"no-store"});
+    const _logoFile = (document.getElementById("siteLogo")?.getAttribute("src") || "LOGO1.png");
+    const resp = await fetch(_logoFile, {cache:"no-store"});
     if(resp && resp.ok){
       const blob = await resp.blob();
       data = await fileToDataURL(blob);
@@ -1282,6 +1330,8 @@ async function getInlineLogoDataURL(){
 
 async function ensureLogosSafe(root){
   if(!root) return;
+  const siteSrc = (document.getElementById("siteLogo")?.getAttribute("src") || "LOGO1.png").trim();
+  const siteFile = siteSrc.split("/").pop();
   // set crossOrigin siempre
   root.querySelectorAll("img").forEach(img=>{ try{ img.crossOrigin = "anonymous"; }catch(e){} });
 
@@ -1290,7 +1340,7 @@ async function ensureLogosSafe(root){
 
   root.querySelectorAll("img").forEach(img=>{
     const src = (img.getAttribute("src")||"").trim();
-    if(src === "LOGO1.png" || src.endsWith("/LOGO1.png") || src.includes("LOGO1.png")){
+    if(src === siteSrc || src.endsWith('/'+siteFile) || src.includes(siteFile) || src.includes('LOGO1.png')){
       img.setAttribute("src", data);
     }
   });
@@ -1298,8 +1348,20 @@ async function ensureLogosSafe(root){
 
 async function ensureLogoOrAsk(node){
   if(!node) return;
-  // 1) intenta sanear (fetch->DataURL) y reemplazar
+  // 1) intenta sanear (DOM->DataURL / fetch->DataURL) y reemplazar
   await ensureLogosSafe(node);
+
+  // En file:// muchos navegadores bloquean export PNG si el logo no está inline.
+  // Pedimos el logo 1 sola vez para guardarlo como DataURL y evitar canvases 'tainted'.
+  try{
+    const hasInline = !!localStorage.getItem(LOGO_DATAURL_KEY);
+    const prompted = localStorage.getItem("MB_LOGO_PROMPTED_V1")==="1";
+    if(location.protocol==="file:" && !hasInline && !prompted){
+      localStorage.setItem("MB_LOGO_PROMPTED_V1","1");
+      const picked = await promptLogoUpload();
+      if(picked){ await ensureLogosSafe(node); }
+    }
+  }catch(e){}
 
   // 2) espera a que carguen imágenes
   await new Promise(r=>setTimeout(r, 60));
@@ -1308,7 +1370,8 @@ async function ensureLogoOrAsk(node){
   const imgs = Array.from(node.querySelectorAll("img"));
   const logoImgs = imgs.filter(img=>{
     const src = (img.getAttribute("src")||"").trim();
-    return src.includes("LOGO1") || src.startsWith("data:image/");
+    const siteFile = (document.getElementById('siteLogo')?.getAttribute('src')||'LOGO1.png').split('/').pop();
+    return src.includes(siteFile) || src.includes('LOGO1') || src.startsWith('data:image/');
   });
 
   // Si hay al menos una imagen y ninguna cargó, forzamos selección
@@ -1790,6 +1853,7 @@ async function saveClientFromForm(){
   const phone = $("cPhone").value.trim();
   const names = $("cNames").value.trim();
   const last  = $("cLast").value.trim();
+  const nit   = ($("cNit")?.value || "").trim();
   const addr  = $("cAddr").value.trim();
   const indic = $("cIndic").value.trim();
 
@@ -1798,7 +1862,7 @@ async function saveClientFromForm(){
 
   const client = {
     phone,
-    names, last, addr, indic,
+    names, last, nit, addr, indic,
     nameKey: normKey(names+" "+last),
     updatedAt: Date.now()
   };
@@ -2076,6 +2140,13 @@ async function checkout(){
   const saleType = $("saleType").value;
   const payMethod = $("payMethod").value;
 
+  // WhatsApp auto (si hay teléfono). Abrimos una pestaña en blanco YA (para evitar bloqueos por popups en async).
+  const _waPhonePre = normalizePhoneForWA(state.selectedClient?.phone || $("cPhone")?.value || "");
+  let _waWin = null;
+  if(_waPhonePre){
+    try{ _waWin = window.open("about:blank", "_blank"); }catch(e){ _waWin = null; }
+  }
+
   const subtotal = cartSubtotal();
   const discountAmount = cartDiscountAmount(subtotal);
   const total = Math.max(subtotal - discountAmount, 0);
@@ -2103,7 +2174,7 @@ async function checkout(){
       monthKey: monthKey(ts),
       saleType, payMethod,
       status: "PENDIENTE",
-      client: client ? { phone:client.phone, names:client.names, last:client.last, addr:client.addr, indic:client.indic } : null,
+      client: client ? { phone:client.phone, names:client.names, last:client.last, nit:(client.nit||""), addr:client.addr, indic:client.indic } : null,
       items: state.cart.map(x=>({...x})),
       subtotal: Number(subtotal.toFixed(2)),
       discountType: state.discount.type,
@@ -2136,7 +2207,22 @@ async function checkout(){
     // Auto descargas SOLO si quieres (respetamos tu setting auto)
     // Nota: aunque sea pendiente, puedes generar comprobante para el cliente; NO cuenta como venta.
     if(state.settings.autoPDF) setTimeout(()=>{ try{ generatePDF(); }catch(e){} }, 200);
-    if(state.settings.autoPNG) setTimeout(()=>{ try{ downloadReceiptPNG(); }catch(e){} }, 700);
+    if(state.settings.autoPNG){ try{ downloadReceiptPNG(); }catch(e){} }
+// WhatsApp auto: si hay teléfono, abre chat con el recibo
+    try{
+      const __url = (function(){
+        const r = state.lastReceipt;
+        const txt = saleToReceiptText(r);
+        const ph = getClientPhoneFromReceipt(r);
+        return ph ? ("https://wa.me/" + ph + "?text=" + encodeURIComponent(txt)) : "";
+      })();
+      if(__url){
+        if(_waWin) _waWin.location.href = __url;
+        else { const w = window.open(__url, "_blank"); if(!w) window.location.href = __url; }
+      }else if(_waWin){
+        try{ _waWin.close(); }catch(e){}
+      }
+    }catch(e){}
 
     alert("Envío creado como PENDIENTE. En 'Envíos pendientes' puedes marcarlo como PAGADO para que cuente como venta.");
     return;
@@ -2149,7 +2235,7 @@ async function checkout(){
     weekKey: weekKey(ts),
     monthKey: monthKey(ts),
     saleType, payMethod,
-    client: client ? { phone:client.phone, names:client.names, last:client.last, addr:client.addr } : null,
+    client: client ? { phone:client.phone, names:client.names, last:client.last, nit:(client.nit||""), addr:client.addr } : null,
     items: state.cart.map(x=>({...x})),
     subtotal: Number(subtotal.toFixed(2)),
     discountType: state.discount.type,
@@ -2182,13 +2268,26 @@ if(sale.saleType !== "ENVIO"){
     try{ generatePDF(); }catch(e){}
   }, 200);
 
-  if(state.settings.autoPNG) setTimeout(()=>{
-    try{ downloadReceiptPNG(); }catch(e){}
-  }, 700);
+  if(state.settings.autoPNG){ try{ downloadReceiptPNG(); }catch(e){} }
 }
 
 
-  alert("Venta registrada. Recibo listo para WhatsApp/PDF/PNG.");
+  // WhatsApp auto: si hay teléfono, abre chat con el recibo
+  try{
+    const __url = (function(){
+      const txt = saleToReceiptText(sale);
+      const ph = getClientPhoneFromReceipt(sale);
+      return ph ? ("https://wa.me/" + ph + "?text=" + encodeURIComponent(txt)) : "";
+    })();
+    if(__url){
+      if(_waWin) _waWin.location.href = __url;
+      else { const w = window.open(__url, "_blank"); if(!w) window.location.href = __url; }
+    }else if(_waWin){
+      try{ _waWin.close(); }catch(e){}
+    }
+  }catch(e){}
+alert("Venta registrada. Recibo listo para WhatsApp/PDF/PNG.");
+  setTimeout(()=>location.reload(), 250);
 }
 
 // ---------- Shipments ----------
@@ -2382,7 +2481,7 @@ function makeLiveReceipt(){
     shop: state.settings.shopName,
     saleType, payMethod,
     status: (saleType==="ENVIO") ? "PENDIENTE" : "PAGADO",
-    client: c ? {phone:c.phone, names:c.names, last:c.last, addr:c.addr, indic:c.indic} : null,
+    client: c ? {phone:c.phone, names:c.names, last:c.last, nit:(c.nit||""), addr:c.addr, indic:c.indic} : null,
     items: state.cart.map(x=>({...x})),
     subtotal: cartSubtotal(),
     discountAmount: cartDiscountAmount(cartSubtotal()),
@@ -2394,8 +2493,9 @@ function saleToReceiptText(s){
   if(!s) return "No hay recibo todavía.";
   const d = new Date(s.ts || Date.now()).toLocaleString();
   const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
-  const phone = s.client?.phone || "—";
-  const addr  = s.client?.addr || "—";
+  const phone  = s.client?.phone || "—";
+  const nitVal = (s.client?.nit || "").trim();
+  const addr   = s.client?.addr  || "—";
   const status = s.status ? `Estatus: ${s.status}` : "";
   const lines = [];
   lines.push(`🧾 *${s.shop}*`);
@@ -2405,6 +2505,7 @@ function saleToReceiptText(s){
   lines.push(`Tipo: ${s.saleType} | Pago: ${s.payMethod}`);
   lines.push(`Cliente: ${client}`);
   lines.push(`Tel: ${phone}`);
+  if(nitVal) lines.push(`NIT: ${nitVal}`);
   lines.push(`Dir: ${addr}`);
   lines.push(`--------------------------------`);
   for(const it of (s.items||[])){
@@ -2432,6 +2533,7 @@ function updateReceiptPreview(){
   const client = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
   $("rClient").textContent = client;
   $("rPhone").textContent = s.client?.phone || "—";
+  if($("rNit")) $("rNit").textContent = s.client?.nit || "—";
   $("rAddr").textContent  = s.client?.addr || "—";
   $("rPay").textContent   = s.payMethod || $("payMethod").value;
 
@@ -2513,11 +2615,39 @@ async function copyReceipt(){
   }
 }
 
-function openWhatsApp(){
-  const s = state.lastReceipt || makeLiveReceipt();
-  const text = saleToReceiptText(s);
-  const url = "https://wa.me/?text=" + encodeURIComponent(text);
+function normalizePhoneForWA(phone){
+  const raw = String(phone||"").trim();
+  if(!raw) return "";
+  // Deja solo dígitos (WhatsApp wa.me usa solo números)
+  let d = raw.replace(/\D+/g,"");
+  if(!d) return "";
+  // Guatemala: si son 8 dígitos, asumimos +502
+  if(d.length === 8) d = "502" + d;
+  // Si viene con 00 prefix (ej. 00502...), lo normalizamos
+  if(d.startsWith("00")) d = d.slice(2);
+  return d;
+}
+function getClientPhoneFromReceipt(s){
+  // 1) del recibo guardado 2) del draft del panel 3) del cliente seleccionado
+  const a = s?.client?.phone;
+  const b = $("cPhone")?.value;
+  const c = state.selectedClient?.phone;
+  return normalizePhoneForWA(a || b || c || "");
+}
+function openWhatsAppForReceipt(s){
+  const r = s || state.lastReceipt || makeLiveReceipt();
+  const text = saleToReceiptText(r);
+  const phone = getClientPhoneFromReceipt(r);
+
+  // Si hay teléfono, abre chat directo. Si no, abre WhatsApp con el texto listo.
+  const url = phone
+    ? ("https://wa.me/" + phone + "?text=" + encodeURIComponent(text))
+    : ("https://wa.me/?text=" + encodeURIComponent(text));
+
   window.open(url, "_blank");
+}
+function openWhatsApp(){
+  openWhatsAppForReceipt(state.lastReceipt || makeLiveReceipt());
 }
 
 
@@ -2622,9 +2752,11 @@ function buildEnvLabelNode(s){
   wrap.style.top = "0";
   wrap.style.padding = "10px";
   wrap.style.boxSizing = "border-box";
-  wrap.style.border = "1px solid rgba(0,0,0,.08)";
+  wrap.style.border = "2px solid #000";
   wrap.style.overflow = "hidden";
   wrap.style.fontFamily = "Arial, sans-serif";
+  wrap.style.color = "#000";
+  wrap.style.fontWeight = "900";
 
   // Layout: header + contenido + footer (footer pegado abajo)
   wrap.style.display = "flex";
@@ -2639,6 +2771,7 @@ function buildEnvLabelNode(s){
 
   const client = s.client ? `${s.client.names || ""} ${s.client.last || ""}`.trim() : "MOSTRADOR";
   const phone  = s.client?.phone || "—";
+  const nit    = s.client?.nit   || "—";
   const addr   = s.client?.addr  || "—";
 
   // Comentario / indicaciones (varios nombres posibles)
@@ -2650,7 +2783,7 @@ function buildEnvLabelNode(s){
   const isCash = (pay === "EFECTIVO" || pay === "CASH");
 
   // Logo: preferir DataURL guardado para evitar fallos al exportar
-  const logoSrc = localStorage.getItem(LOGO_DATAURL_KEY) || "LOGO1.png";
+  const logoSrc = localStorage.getItem(LOGO_DATAURL_KEY) || (document.getElementById("siteLogo")?.getAttribute("src") || "LOGO1.png");
 
   // ====== CABECERA (Logo + Tienda + # Envío) ======
   const header = document.createElement("div");
@@ -2670,8 +2803,8 @@ function buildEnvLabelNode(s){
   const logo = document.createElement("img");
   logo.src = logoSrc;
   logo.alt = "LOGO";
-  logo.style.height = "60px";
-  logo.style.width = "60px";
+  logo.style.height = "80px";
+  logo.style.width = "80px";
   logo.style.objectFit = "contain";
   logo.style.borderRadius = "10px";
   logo.style.border = "1px solid rgba(0,0,0,.08)";
@@ -2687,9 +2820,17 @@ function buildEnvLabelNode(s){
   const info = document.createElement("div");
   info.style.lineHeight = "1.12";
   info.innerHTML = `
-    <div style="font-weight:1000;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client)}</div>
-    <div style="font-weight:1100;font-size:15px;letter-spacing:.2px;">${escapeHtml(phone)}</div>
-    <div style="font-weight:900;font-size:10px;color:#0e5b2a;">${escapeHtml(status)}</div>
+    <div style="font-weight:1100;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(client)}</div>
+
+    <div style="margin-top:4px;display:inline-block;border:2px solid #000;border-radius:14px;padding:6px 10px;font-weight:1200;font-size:24px;letter-spacing:.3px;">
+      ${escapeHtml(phone)}
+    </div>
+
+    <div style="margin-top:4px;font-weight:1100;font-size:13px;">NIT: ${escapeHtml(nit)}</div>
+
+    <div style="margin-top:4px;font-weight:1100;font-size:12px;color:#000;">
+      ESTATUS: <span style="font-weight:1300;font-size:14px;">${escapeHtml(status)}</span>
+    </div>
   `;
   wrap.appendChild(info);
 
@@ -2697,7 +2838,7 @@ function buildEnvLabelNode(s){
   const content = document.createElement("div");
   content.style.flex = "1 1 auto";
   content.style.minHeight = "0";
-  content.style.border = "1px solid rgba(0,0,0,.12)";
+  content.style.border = "2px solid #000";
   content.style.borderRadius = "8px";
   content.style.padding = "6px";
   content.style.boxSizing = "border-box";
@@ -2719,32 +2860,77 @@ function buildEnvLabelNode(s){
   commEl.style.overflowWrap = "anywhere";
   commEl.textContent = "Indicaciones: " + (indic || "—");
 
-  content.appendChild(addrEl);
-  content.appendChild(commEl);
+    // Layout interno: 2 bloques con altura fija y auto-ajuste
+  content.style.display = "flex";
+  content.style.flexDirection = "column";
+  content.style.gap = "6px";
+
+  const addrBox = document.createElement("div");
+  addrBox.style.flex = "0 0 48%";
+  addrBox.style.minHeight = "0";
+  addrBox.style.overflow = "hidden";
+  addrBox.style.borderBottom = "2px solid #000";
+  addrBox.style.paddingBottom = "4px";
+
+  const commBox = document.createElement("div");
+  commBox.style.flex = "1 1 auto";
+  commBox.style.minHeight = "0";
+  commBox.style.overflow = "hidden";
+
+  addrEl.style.fontSize = "18px";
+  commEl.style.fontSize = "16px";
+
+  addrBox.appendChild(addrEl);
+  commBox.appendChild(commEl);
+  content.appendChild(addrBox);
+  content.appendChild(commBox);
   wrap.appendChild(content);
+
+  // Auto-ajuste: grande si cabe, pequeño si no cabe (por campo)
+  requestAnimationFrame(()=>{
+    autoFitTextToBox(addrBox, addrEl, 20, 9);
+    autoFitTextToBox(commBox, commEl, 18, 8);
+  });
 
   // ====== FOOTER (pegado abajo) ======
   const payBox = document.createElement("div");
   payBox.style.marginTop = "auto";
-  payBox.style.borderTop = "1px solid rgba(0,0,0,.12)";
+  payBox.style.borderTop = "2px solid #000";
   payBox.style.paddingTop = "6px";
   payBox.style.lineHeight = "1.05";
 
   payBox.innerHTML = isCash
     ? `
-      <div style="display:flex;justify-content:space-between;font-weight:1200;font-size:18px;">
+      <div style="display:flex;justify-content:space-between;font-weight:1300;font-size:22px;">
         <span>TOTAL</span><span>${money(total)}</span>
+      </div>
+      <div style="margin-top:4px;font-weight:1200;font-size:18px;">
+        <span style="opacity:.95">PAGO:</span> <span style="font-weight:1400">${escapeHtml(pay)}</span>
       </div>
     `
     : `
-      <div style="display:flex;justify-content:space-between;font-weight:1200;font-size:16px;">
-        <span>PAGO</span><span>${escapeHtml(pay)}</span>
+      <div style="display:flex;justify-content:space-between;font-weight:1300;font-size:20px;">
+        <span>PAGO</span><span style="font-weight:1400">${escapeHtml(pay)}</span>
       </div>
     `;
 
   wrap.appendChild(payBox);
 
   return wrap;
+}
+
+
+function autoFitTextToBox(boxEl, textEl, maxPx, minPx){
+  if(!boxEl || !textEl) return;
+  const max = Number(maxPx||18);
+  const min = Number(minPx||8);
+  for(let fs=max; fs>=min; fs-=0.5){
+    textEl.style.fontSize = fs + "px";
+    // fuerza layout
+    if(textEl.scrollHeight <= boxEl.clientHeight && textEl.scrollWidth <= boxEl.clientWidth){
+      break;
+    }
+  }
 }
 
 function fitEnvLabelToBox(node){
@@ -2870,6 +3056,7 @@ function receiptToPrintableHTML(s){
   const d = new Date(s.ts || Date.now()).toLocaleString();
   const clientName = s.client ? `${s.client.names} ${s.client.last}` : "MOSTRADOR";
   const phone = s.client?.phone || "—";
+  const nit   = (s.client?.nit || "—");
   const addr  = s.client?.addr  || "—";
 
   const rows = (s.items||[]).map(it=>{
@@ -2889,7 +3076,7 @@ function receiptToPrintableHTML(s){
   const total = Number(s.total ?? 0);
   const pay = (s.payMethod || s.paymentMethod || "EFECTIVO").toString().toUpperCase();
 
-  const logoSrc = localStorage.getItem(LOGO_DATAURL_KEY) || "LOGO1.png";
+  const logoSrc = localStorage.getItem(LOGO_DATAURL_KEY) || (document.getElementById("siteLogo")?.getAttribute("src") || "LOGO1.png");
 
   const isEnv = (s.saleType === "ENVIO");
 
@@ -2911,7 +3098,7 @@ function receiptToPrintableHTML(s){
     : ``;
 
   const statusLine = s.status
-    ? `<div class="meta" style="margin-top:6px;color:#a16207;font-weight:900">Estatus: ${escapeHtml(s.status)}</div>`
+    ? `<div class="meta" style="margin-top:6px;color:#111;font-weight:1000;font-size:14px">Estatus: ${escapeHtml(s.status)}</div>`
     : ``;
 
   return `
@@ -2933,16 +3120,17 @@ function receiptToPrintableHTML(s){
       .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px; }
       .card{ border:1px solid #eee; border-radius:12px; padding:12px; }
       .label{ color:#666; font-size:12px; font-weight:700; }
-      .val{ font-size:13px; font-weight:800; margin-top:3px; white-space:pre-wrap; word-break:break-word; }
+      .val{ font-size:13px; font-weight:900; margin-top:3px; white-space:pre-wrap; word-break:break-word; }
+      .fitField{ height:64px; overflow:hidden; }
       table{ width:100%; border-collapse:collapse; margin-top:14px; }
       th,td{ border-bottom:1px solid #eee; padding:8px; font-size:13px; }
       th{ background:#ffe4f1; text-align:left; }
-      .totalRow{ display:flex; justify-content:space-between; margin-top:10px; font-weight:1000; font-size:14px; }
-      .box .footer .totalRow{ font-size:16px; }
+      .totalRow{ display:flex; justify-content:space-between; margin-top:10px; font-weight:1200; font-size:16px; }
+      .box .footer .totalRow{ font-size:20px; }
       .foot{ margin-top:12px; color:#444; font-size:12px; font-weight:700; }
       .content{ flex:1 1 auto; min-height:0; }
       .footer{ margin-top:auto; }
-      .phoneBig{ font-size:16px; font-weight:1000; }
+      .phoneBig{ display:inline-block; font-size:24px; font-weight:1000; border:2px solid #111; border-radius:14px; padding:6px 10px; letter-spacing:.3px; }
 
       @media print{
         body{ background:#fff; }
@@ -2978,6 +3166,23 @@ function receiptToPrintableHTML(s){
             }else{
               break;
             }
+          }
+
+          // Auto-fit por campo (Dirección / Indicaciones)
+          var fitField = function(sel, max, min){
+            var el = document.querySelector(sel);
+            if(!el) return;
+            var fs2 = max;
+            for(var k=0;k<60;k++){
+              el.style.fontSize = fs2 + "px";
+              if(el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth) break;
+              fs2 -= 0.5;
+              if(fs2 <= min){ el.style.fontSize = min + "px"; break; }
+            }
+          };
+          if(IS_ENV){
+            fitField(".fitAddr", 18, 8);
+            fitField(".fitIndic", 16, 7.5);
           }
         }
 
@@ -3026,15 +3231,17 @@ window.addEventListener('load', function(){
           <div class="val">${escapeHtml(clientName)}</div>
           <div class="label" style="margin-top:10px">Teléfono</div>
           <div class="val ${isEnv ? "phoneBig" : ""}">${escapeHtml(phone)}</div>
+          <div class="label" style="margin-top:10px">NIT</div>
+          <div class="val">${escapeHtml(nit)}</div>
         </div>
         <div class="card">
           <div class="label">Dirección</div>
-          <div class="val">${escapeHtml(addr)}</div>
+          <div class="val fitField fitAddr">${escapeHtml(addr)}</div>
         </div>
         ${isEnv ? `
         <div class="card">
           <div class="label">Indicaciones</div>
-          <div class="val">${escapeHtml(indic)}</div>
+          <div class="val fitField fitIndic">${escapeHtml(indic)}</div>
         </div>
         ` : ``}
       </div>
@@ -3784,6 +3991,43 @@ function sanitizeSettings(){
   if(state.settings.envPngScale===undefined) state.settings.envPngScale = 2;
   if(state.settings.envPdfWidthMM===undefined) state.settings.envPdfWidthMM = 80;
   if(state.settings.envPdfMarginMM===undefined) state.settings.envPdfMarginMM = 6;
+  if(state.settings.payMethods===undefined) state.settings.payMethods = ["EFECTIVO","TARJETA","TRANSFERENCIA"];
+}
+
+
+function getPayMethods(){
+  const raw = state.settings?.payMethods;
+  let list = [];
+  if(Array.isArray(raw)) list = raw.slice();
+  else if(typeof raw === "string") list = raw.split(/[\n,]+/g);
+  else list = ["EFECTIVO","TARJETA","TRANSFERENCIA"];
+
+  list = list.map(s=>String(s||"").trim()).filter(Boolean);
+  // normaliza y evita duplicados
+  const seen = new Set();
+  const out = [];
+  for(const x of list){
+    const key = x.toUpperCase();
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out.length ? out : ["EFECTIVO","TARJETA","TRANSFERENCIA"];
+}
+
+function renderPayMethodSelect(){
+  const sel = $("payMethod");
+  if(!sel) return;
+  const current = String(sel.value || "").toUpperCase();
+  const methods = getPayMethods();
+  sel.innerHTML = "";
+  for(const m of methods){
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  }
+  sel.value = methods.includes(current) ? current : methods[0];
 }
 
 async function loadSettings(){
@@ -3799,10 +4043,15 @@ async function loadSettings(){
   $("sAutoPDF").value = state.settings.autoPDF ? "1" : "0";
   $("sAutoPNG").value = state.settings.autoPNG ? "1" : "0";
 
+  if($("sPayMethods")) $("sPayMethods").value = (Array.isArray(state.settings.payMethods)? state.settings.payMethods.join("\n") : (state.settings.payMethods||""));
+
   $("sEnvPngWidth").value = state.settings.envPngWidth;
   $("sEnvPngScale").value = state.settings.envPngScale;
   $("sEnvPdfWidth").value = state.settings.envPdfWidthMM;
   $("sEnvPdfMargin").value = state.settings.envPdfMarginMM;
+
+
+  renderPayMethodSelect();
 
   $("rShop").textContent = state.settings.shopName || "Tienda de Ropa";
   $("cShop").textContent = state.settings.shopName || "Tienda de Ropa";
@@ -3814,6 +4063,8 @@ async function saveSettings(){
   const shopName = $("sShopName").value.trim() || "Tienda de Ropa";
   const autoPDF = $("sAutoPDF").value==="1";
   const autoPNG = $("sAutoPNG").value==="1";
+
+  const payMethodsRaw = ($("sPayMethods")?.value || "").trim();
 
   const envPngWidth = Number($("sEnvPngWidth").value||360);
   const envPngScale = Number($("sEnvPngScale").value||2);
@@ -3835,12 +4086,19 @@ async function saveSettings(){
   state.settings.autoPDF = autoPDF;
   state.settings.autoPNG = autoPNG;
 
+
+  // Formas de pago (una por línea o coma)
+  state.settings.payMethods = payMethodsRaw
+    ? payMethodsRaw.split(/[\n,]+/g).map(s=>String(s||"").trim()).filter(Boolean).map(s=>s.toUpperCase())
+    : (state.settings.payMethods || ["EFECTIVO","TARJETA","TRANSFERENCIA"]);
+
   state.settings.envPngWidth = Math.max(260, Math.min(520, envPngWidth));
   state.settings.envPngScale = Math.max(1, Math.min(4, envPngScale));
   state.settings.envPdfWidthMM = Math.max(50, Math.min(120, envPdfWidthMM));
   state.settings.envPdfMarginMM = Math.max(0, Math.min(20, envPdfMarginMM));
 
   await idbPut("meta",{key:"settings", value: state.settings});
+  renderPayMethodSelect();
   alert("Ajustes guardados.");
   updateReceiptPreview();
   buildClose();
@@ -4133,6 +4391,7 @@ onClick("btnClearDisc", ()=>{
     $("cLast").value  = c.last || "";
     $("cAddr").value  = c.addr || "";
     $("cIndic").value = c.indic || "";
+    if($("cNit")) $("cNit").value = c.nit || "";
     alert("Cliente cargado.");
     updateReceiptPreview();
   });
@@ -4145,7 +4404,12 @@ onClick("btnClearDisc", ()=>{
       return;
     }
     state.selectedClient = null;
-    $("cPhone").value=""; $("cNames").value=""; $("cLast").value=""; $("cAddr").value=""; $("cIndic").value="";
+    $("cPhone").value="";
+    $("cNames").value="";
+    $("cLast").value="";
+    if($("cNit")) $("cNit").value="";
+    $("cAddr").value="";
+    $("cIndic").value="";
     alert("Listo: venta MOSTRADOR sin cliente.");
     updateReceiptPreview();
   });
@@ -4178,7 +4442,7 @@ $("saleType").addEventListener("change", ()=>{
       const c = await findClientByPhone(phone);
       if(c){
         state.selectedClient = c;
-        $("cPhone").value=c.phone; $("cNames").value=c.names; $("cLast").value=c.last; $("cAddr").value=c.addr; $("cIndic").value=c.indic||"";
+        $("cPhone").value=c.phone; $("cNames").value=c.names; $("cLast").value=c.last; if($("cNit")) $("cNit").value=c.nit||""; $("cAddr").value=c.addr; $("cIndic").value=c.indic||"";
         setView("pos");
         updateReceiptPreview();
       }
