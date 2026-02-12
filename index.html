@@ -175,6 +175,13 @@
       border-color: rgba(255,79,183,.55);
       box-shadow: 0 18px 34px rgba(255,79,183,.18);
       background: linear-gradient(180deg, #fff 0%, #fff1fa 100%);
+      animation: navPulse 1.1s ease-in-out infinite;
+    }
+    /* NAV ACTIVE ANIM */
+    @keyframes navPulse{
+      0%{ transform: translateX(0) scale(1); }
+      50%{ transform: translateX(6px) scale(1.01); }
+      100%{ transform: translateX(0) scale(1); }
     }
 
     .sidecard{
@@ -303,6 +310,7 @@
       grid-template-columns: 1fr 1fr;
       gap:10px;
     }
+    .form.stack{ grid-template-columns: 1fr; }
     .field{ display:flex; flex-direction:column; gap:6px; }
     .field label{
       font-size:12px;
@@ -486,7 +494,108 @@
   border-bottom: 1px solid rgba(0,0,0,.25);
 }
 
-  </style>
+  
+
+/* ===== MODAL CÓDIGO (EDICIÓN) ===== */
+.mb-modal{
+  position:fixed; inset:0; z-index:9999;
+  display:none; align-items:center; justify-content:center;
+  padding:14px;
+  background:rgba(0,0,0,.65);
+}
+.mb-modal.show{display:flex;}
+.mb-modal-card{
+  width:min(520px,100%);
+  background:linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  overflow:hidden;
+
+  color: var(--pink);
+}
+.mb-modal-head{
+  display:flex; align-items:center; gap:12px;
+  padding:14px;
+  background:rgba(255,255,255,.03);
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.mb-modal-logo{width:46px;height:46px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.06);padding:6px}
+.mb-modal-title{font-weight:900;letter-spacing:.2px;color:var(--pink)}
+.mb-modal-sub{font-size:12px;opacity:.9;margin-top:2px;color:rgba(255,79,183,.85)}
+.mb-modal-x{
+  margin-left:auto;
+  width:40px;height:40px;
+  border-radius:12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  color:var(--pink);
+  cursor:pointer;
+}
+.mb-modal-body{padding:14px}
+.mb-modal-input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font-size:16px;
+  outline:none;
+  margin-top:6px;
+}
+.mb-modal-input::placeholder{color:rgba(255,79,183,.55)}
+
+.mb-modal-input:focus{border-color: rgba(255,79,183,.85); box-shadow:0 0 0 4px rgba(255,79,183,.22);}
+.mb-modal-actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+.mb-modal-actions button{flex:1; min-width:140px}
+.mb-modal-err{color:#ff6b6b;font-size:12px;margin-top:8px;min-height:16px}
+/* ===== MODAL MENSAJE (OK) ===== */
+.ok-modal{position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.65);}
+.ok-modal.show{display:flex;}
+#genProdOverlayMB.ok-modal{z-index:10050;}
+#invOverlayMB.ok-modal{z-index:10050;}
+#mixOverlayMB.ok-modal{z-index:10050;}
+.ok-card{width:min(520px,100%);background:linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.6);overflow:hidden;color:#fff;}
+.ok-head{display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);}
+.ok-logo{width:46px;height:46px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.06);padding:6px}
+.ok-title{font-weight:900;letter-spacing:.2px}
+.ok-body{padding:14px}
+.ok-msg{font-size:13px;opacity:.9;line-height:1.45}
+.ok-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+
+
+#view-products .productsGrid{ grid-template-columns:1fr; }
+
+/* ===== LOADING SPINNER (COBRAR) ===== */
+#checkoutLoading.ok-modal{ z-index:9999; }
+.loading-card{
+  width:min(420px,100%);
+  background:linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  overflow:hidden;
+  color:#fff;
+}
+.loading-body{ padding:18px; display:flex; align-items:center; gap:14px; }
+.loading-spinner{
+  width:56px; height:56px;
+  border-radius:999px;
+  border:6px solid rgba(255,255,255,.20);
+  border-top-color: var(--pink);
+  animation: spin 1s linear infinite;
+  flex:0 0 auto;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.loading-text b{ display:block; font-weight:1000; letter-spacing:.2px; }
+.loading-text small{ display:block; margin-top:4px; opacity:.85; font-weight:800; }
+
+
+/* --- UI cleanup: Generador --- */
+#genCreatePanelMB{display:none!important;}
+
+</style>
 </head>
 <body>
 <div class="simpleNotice">
@@ -517,7 +626,9 @@
         <button data-view="shipments"><span>🚚 Envíos pendientes</span><span class="tag">ENVÍO</span></button>
         <button data-view="clients"><span>👩‍💼 Clientes</span><span class="tag">DB</span></button>
         <button data-view="reports"><span>📊 Reportes</span><span class="tag">D/W/M</span></button>
-        <button data-view="products"><span>🧷 Productos</span><span class="tag">SKU</span></button>
+                <button type="button" onclick="openLabelsModal()"><span>🏷️ Generador</span><span class="tag">ETI</span></button>
+<button data-view="products"><span>🧷 Productos</span><span class="tag">SKU</span></button>
+        <button data-action="prodform"><span>➕ Crear productos / Mod</span><span class="tag">FORM</span></button>
         <button data-view="inventory"><span>📦 Inventarios</span><span class="tag">STOCK</span></button>
         <button data-view="kardex"><span>📊</span><b>Kardex</b><i>Movimientos</i></button>
 <button data-view="close"><span>🧾 Cierres</span><span class="tag">DÍA</span></button>
@@ -649,7 +760,23 @@
                   <option value="EFECTIVO">EFECTIVO</option>
                   <option value="TARJETA">TARJETA</option>
                   <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                  <option value="MIXTO">MIXTO (EFECTIVO + TARJETA)</option>
                 </select>
+              </div>
+
+              <div class="field" id="mixPayWrap" style="display:none">
+                <label>Pago mixto</label>
+                <div class="rowflex" style="gap:10px">
+                  <div style="flex:1">
+                    <div class="muted" style="margin-bottom:6px">Efectivo (Q)</div>
+                    <input id="mixCash" type="number" min="0" step="0.01" placeholder="0.00"/>
+                  </div>
+                  <div style="flex:1">
+                    <div class="muted" style="margin-bottom:6px">Tarjeta (Q)</div>
+                    <input id="mixCard" type="number" min="0" step="0.01" placeholder="0.00"/>
+                  </div>
+                </div>
+                <div class="muted" style="margin-top:6px">La suma debe ser igual al total.</div>
               </div>
 
               <div class="field">
@@ -880,10 +1007,35 @@
 
       <!-- PRODUCTS VIEW -->
       <section id="view-products" class="hide">
-        <div class="grid">
+        <div class="grid productsGrid">
           <div class="card">
+            <h3>📦 Lista de productos</h3>
+            <div class="rowflex">
+              <input id="prodSearch" class="grow" placeholder="Buscar por código o nombre..."/>
+              <button class="btn" id="btnProdRefresh">Refrescar</button>
+              <button class="btn ghost" id="btnGoProdForm">Crear / Modificar</button>
+            </div>
+
+            <div style="margin-top:12px; overflow:auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Costo</th>
+                    <th>Stock</th>
+                    <th style="width:140px">Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="productsBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" id="prodFormCard">
             <h3>🧷 Productos (SKU / Código)</h3>
-            <div class="form">
+            <div class="form stack">
               <div class="field">
                 <label>Código (SKU / Barras)</label>
                 <input id="pCode" placeholder="Ej: 7501234567890"/>
@@ -897,38 +1049,20 @@
                 <input id="pPrice" type="number" min="0" step="0.01" placeholder="Ej: 125"/>
               </div>
               <div class="field">
+                <label>Costo (Q)</label>
+                <input id="pCost" type="number" min="0" step="0.01" placeholder="Ej: 80"/>
+              </div>
+              <div class="field">
                 <label>Stock</label>
                 <input id="pStock" type="number" min="0" step="1" placeholder="Ej: 10"/>
               </div>
               <div class="field full">
                 <div class="rowflex">
                   <button class="btn primary" id="btnSaveProduct">Guardar producto</button>
+                  <button class="btn danger" id="btnLogoutAdmin" type="button">Cerrar sesión admin</button>
                 </div>
                 <div class="muted">Puedes agregar tus productos manualmente con código, nombre, precio y stock.</div>
               </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <h3>📦 Lista de productos</h3>
-            <div class="rowflex">
-              <input id="prodSearch" class="grow" placeholder="Buscar por código o nombre..."/>
-              <button class="btn" id="btnProdRefresh">Refrescar</button>
-            </div>
-
-            <div style="margin-top:12px; overflow:auto">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Producto</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th style="width:140px">Acción</th>
-                  </tr>
-                </thead>
-                <tbody id="productsBody"></tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -941,6 +1075,7 @@
           <div class="rowflex">
             <input id="invSearch" class="grow" placeholder="Buscar por código o nombre..."/>
             <button class="btn" id="btnInvRefresh">Refrescar</button>
+            <button class="btn ghost" id="btnInvExportXLS" title="Exportar a Excel">🟩 Excel</button>
           </div>
           <div class="muted" style="margin-top:8px">Muestra el stock actual. Se descuenta automáticamente al cobrar (y también cuando se crea un envío pendiente).</div>
 
@@ -951,6 +1086,7 @@
                   <th>Código</th>
                   <th>Producto</th>
                   <th>Precio</th>
+                  <th>Costo</th>
                   <th>Stock</th>
                 </tr>
               </thead>
@@ -1329,6 +1465,7 @@ async function getInlineLogoDataURL(){
 
   // intento 1: fetch LOGO1.png (funciona bien en http/https)
   try{
+    if(location.protocol==="file:") throw new Error("skip file fetch");
     const _logoFile = (document.getElementById("siteLogo")?.getAttribute("src") || "LOGO1.png");
     const resp = await fetch(_logoFile, {cache:"no-store"});
     if(resp && resp.ok){
@@ -1633,6 +1770,16 @@ async function getShiftStartTs(){
 async function setShiftStartTs(ts){
   await idbPut("meta", { key:"shiftStartTs", value: Number(ts||Date.now()) });
 }
+
+// ===== ÚLTIMO CIERRE (para cierres múltiples por día) =====
+async function getLastCloseTs(dateKey){
+  const m = await idbGet("meta", "lastCloseTs_" + (dateKey||todayKey()));
+  return m?.value ? Number(m.value) : null;
+}
+async function setLastCloseTs(dateKey, ts){
+  await idbPut("meta", { key: "lastCloseTs_" + (dateKey||todayKey()), value: Number(ts||Date.now()) });
+}
+
 async function clearPaidShipments(){
   const all = await idbAll("shipments");
   const paid = all.filter(s => (s.status||"PENDIENTE")==="PAGADO" && (s.saleId || s.paidAt));
@@ -1776,6 +1923,17 @@ const views = {
   settings: {title:"Ajustes", sub:"Nombre de tienda, tamaños ENVÍO y respaldos (exportar/importar)."}
 };
 
+
+async function renderReports(){
+  // Wrapper requerido por setView("reports"). Mantiene compatibilidad sin alterar lógica existente.
+  try{
+    await renderReport("daily");
+  }catch(err){
+    console.error("renderReports failed:", err);
+  }
+}
+
+
 function setView(v){
   // Robust: evita crasheos si llega un data-view inexistente
   if(!v || !views[v]){
@@ -1784,6 +1942,14 @@ function setView(v){
   }
 
   state.view = v;
+
+
+  // 🔥 Nav: resaltar el botón activo
+  try{
+    document.querySelectorAll("#nav button[data-view]").forEach(b=>{
+      b.classList.toggle("active", b.dataset.view===v);
+    });
+  }catch(e){}
 
   const tEl = $("viewTitle");
   const sEl = $("viewSub");
@@ -1883,7 +2049,7 @@ async function saveClientFromForm(){
   };
   await idbPut("clients", client);
   state.selectedClient = client;
-  alert("Cliente guardado.");
+  showOkModal("Registro exitoso","Registro guardado.", {enter:true});;
   await refreshKPIs();
   if(state.view==="clients") renderClients();
   updateReceiptPreview();
@@ -1916,11 +2082,13 @@ async function saveProductFromForm(){
   const code = $("pCode").value.trim();
   const name = $("pName").value.trim();
   const price = Number($("pPrice").value);
+  const cost = Number($("pCost").value);
   const stock = Number($("pStock").value);
 
   if(!code) return alert("Ingrese Código (SKU/barras).");
   if(!name) return alert("Ingrese Nombre.");
   if(isNaN(price) || price<0) return alert("Precio inválido.");
+  if(isNaN(cost) || cost<0) return alert("Costo inválido.");
   if(isNaN(stock) || stock<0) return alert("Stock inválido.");
 
   const exists = await idbGet("products", code);
@@ -1930,7 +2098,7 @@ async function saveProductFromForm(){
 
   const product = {
     code, name,
-    price, stock,
+    price, cost, stock,
     nameKey: normKey(name),
     updatedAt: Date.now()
   };
@@ -1951,7 +2119,7 @@ async function saveProductFromForm(){
       });
     }
   }
-  alert("Producto guardado.");
+  showOkModal("Registro exitoso","Producto guardado.", {enter:true});;
   $("pCode").value=""; $("pName").value=""; $("pPrice").value=""; $("pStock").value="";
   await refreshKPIs();
   renderProducts();
@@ -1975,6 +2143,7 @@ async function renderProducts(){
       <td>${escapeHtml(p.code)}</td>
       <td>${escapeHtml(p.name)}</td>
       <td>${money(p.price)}</td>
+      <td>${money(p.cost||0)}</td>
       <td>${Number(p.stock||0)}</td>
       <td>
         <button class="btn small" data-fillprod="${escapeHtml(p.code)}">Editar</button>
@@ -2021,6 +2190,7 @@ async function renderInventory(){
       <td>${escapeHtml(p.code)}</td>
       <td>${escapeHtml(p.name)}</td>
       <td>${money(p.price)}</td>
+      <td>${money(p.cost||0)}</td>
       <td>${Number(p.stock||0)}</td>
     `;
     tb.appendChild(tr);
@@ -2029,6 +2199,120 @@ async function renderInventory(){
 
 
 // ---------- Kardex UI ----------
+
+function exportInventoryExcel(){
+  // Exporta a Excel (HTML .xls) con tabla formateada (no CSV)
+  idbAll("products").then((products)=>{
+    const rows = (products || []).slice().sort((a,b)=> (a.nameKey||"").localeCompare(b.nameKey||""));
+    const now = new Date();
+    const title = `Inventario (Stock actual) - ${now.toLocaleString()}`;
+
+    const header = `
+      <html><head><meta charset="utf-8">
+      <style>
+        body{font-family:Arial, sans-serif;}
+        h2{margin:0 0 10px 0;}
+        table{border-collapse:collapse; width:100%;}
+        th,td{border:1px solid #333; padding:8px; font-size:12px;}
+        th{background:#e6f4ea; font-weight:700;}
+        .num{text-align:right;}
+        .muted{color:#555; font-size:11px; margin:6px 0 12px;}
+      </style></head><body>
+      <h2>${escapeHtml(title)}</h2>
+      <div class="muted">Exportado desde MTR ONLINE AP</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th class="num">Precio (Q)</th>
+            <th class="num">Costo (Q)</th>
+            <th class="num">Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    const body = rows.map(p=>{
+      const code = escapeHtml(p.code||"");
+      const name = escapeHtml(p.name||"");
+      const price = Number(p.price||0).toFixed(2);
+      const cost = Number(p.cost||0).toFixed(2);
+      const stock = Number(p.stock||0);
+      return `<tr>
+        <td>${code}</td>
+        <td>${name}</td>
+        <td class="num">${price}</td>
+        <td class="num">${cost}</td>
+        <td class="num">${stock}</td>
+      </tr>`;
+    }).join("");
+
+    const footer = `
+        </tbody>
+      </table>
+      
+<!-- Modal: Crear producto (desde Generador) -->
+<div class="ok-modal" id="genProdOverlayMB" aria-hidden="true" style="display:none">
+  <div class="ok-modal-card" role="dialog" aria-modal="true" aria-labelledby="genProdTitleMB" style="max-width:520px">
+    <div class="ok-modal-head">
+      <div class="ok-modal-title" id="genProdTitleMB">➕ Crear producto</div>
+      <button class="btn mb-modal-x" type="button" onclick="closeGenProdModalMB()">✕</button>
+    </div>
+    <div class="ok-modal-body">
+      <div class="form stack">
+        <div class="field">
+          <label>Código / SKU</label>
+          <input id="mbNewPCode" placeholder="Ej: 7501234567890"/>
+        </div>
+        <div class="field">
+          <label>Nombre</label>
+          <input id="mbNewPName" placeholder="Ej: Camisa Oxford"/>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field grow">
+            <label>Precio (Q)</label>
+            <input id="mbNewPPrice" inputmode="decimal" placeholder="129.00"/>
+          </div>
+          <div class="field grow">
+            <label>Costo (Q)</label>
+            <input id="mbNewPCost" inputmode="decimal" placeholder="80.00"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Stock</label>
+          <input id="mbNewPStock" inputmode="numeric" placeholder="0"/>
+        </div>
+      </div>
+    </div>
+    <div class="ok-modal-foot">
+      <button class="btn primary" type="button" onclick="saveGenProductMB()">Guardar en inventario</button>
+      <button class="btn" type="button" onclick="closeGenProdModalMB()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>
+    `;
+
+    const html = header + body + footer;
+
+    const blob = new Blob([html], {type:"application/vnd.ms-excel;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,"0");
+    const d = String(now.getDate()).padStart(2,"0");
+    a.download = `inventario_${y}-${m}-${d}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }).catch((e)=>{
+    console.warn(e);
+    alert("No se pudo exportar el inventario.");
+  });
+}
+
 async function renderKardex(){
   const q = ($("kSearch")?.value || "").trim().toLowerCase();
   const t = ($("kType")?.value || "").trim();
@@ -2147,13 +2431,45 @@ async function restoreStockForItems(items, refType="", refId="", note=""){
   }
 }
 
+
+function playSaleTone(){
+  try{
+    const a = document.getElementById('saleTone');
+    if(!a) return;
+    a.currentTime = 0;
+    const p = a.play();
+    if(p && typeof p.catch === 'function') p.catch(()=>{});
+  }catch(e){}
+}
+
 async function checkout(){
+  if(state._checkoutBusy) return;
+  state._checkoutBusy = true;
+  try{
   if(state.cart.length===0) return alert("No hay productos en la venta.");
   const clientRule = requireClientIfShipping();
   if(!clientRule.ok) return alert(clientRule.msg);
 
   const saleType = $("saleType").value;
-  const payMethod = $("payMethod").value;
+  let payMethod = $("payMethod").value;
+  let paySplit = null;
+  if(payMethod==="MIXTO"){
+    const subtotalTmp = cartSubtotal();
+    const discountAmountTmp = cartDiscountAmount(subtotalTmp);
+    const totalTmp = Math.max(subtotalTmp - discountAmountTmp, 0);
+
+    const cash = Number($("mixCash")?.value || 0);
+    const card = Number($("mixCard")?.value || 0);
+    if(!isFinite(cash) || cash<0) return alert("Efectivo inválido.");
+    if(!isFinite(card) || card<0) return alert("Tarjeta inválida.");
+
+    const sum = Number((cash + card).toFixed(2));
+    const tot = Number(totalTmp.toFixed(2));
+    if(Math.abs(sum - tot) > 0.01){
+      return alert("Pago mixto: la suma de Efectivo + Tarjeta debe ser igual al total.");
+    }
+    paySplit = { EFECTIVO: Number(cash.toFixed(2)), TARJETA: Number(card.toFixed(2)) };
+  }
 
   // WhatsApp auto (si hay teléfono). Abrimos una pestaña en blanco YA (para evitar bloqueos por popups en async).
   const _waPhonePre = normalizePhoneForWA(state.selectedClient?.phone || $("cPhone")?.value || "");
@@ -2188,6 +2504,7 @@ async function checkout(){
       weekKey: weekKey(ts),
       monthKey: monthKey(ts),
       saleType, payMethod,
+    paySplit,
       status: "PENDIENTE",
       client: client ? { phone:client.phone, names:client.names, last:client.last, nit:(client.nit||""), addr:client.addr, indic:client.indic } : null,
       items: state.cart.map(x=>({...x})),
@@ -2221,14 +2538,21 @@ async function checkout(){
 
     // Auto descargas SOLO si quieres (respetamos tu setting auto)
     // Nota: aunque sea pendiente, puedes generar comprobante para el cliente; NO cuenta como venta.
-    if(state.settings.autoPDF) setTimeout(()=>{ try{ generatePDF(); }catch(e){} }, 200);
-    if(state.settings.autoPNG){ try{ downloadReceiptPNG(); }catch(e){} }
+    // IMPORTANTÍSIMO: el navegador puede BLOQUEAR descargas múltiples automáticas.
+    // Priorizamos 1 sola descarga automática por venta:
+    // - Si autoPNG está activo => descargamos PNG.
+    // - Si NO, pero autoPDF está activo => descargamos PDF.
+    if(state.settings.autoPNG){
+      try{ await downloadReceiptPNG(); }catch(e){}
+    }else if(state.settings.autoPDF){
+      try{ generatePDF(); }catch(e){}
+    }
 // WhatsApp auto: si hay teléfono, abre chat con el recibo
     try{
       const __url = (function(){
         const r = state.lastReceipt;
         const txt = saleToReceiptText(r);
-        const ph = getClientPhoneFromReceipt(r);
+        const ph = (getClientPhoneFromReceipt(r) || _waPhonePre);
         return ph ? ("https://wa.me/" + ph + "?text=" + encodeURIComponent(txt)) : "";
       })();
       if(__url){
@@ -2239,7 +2563,7 @@ async function checkout(){
       }
     }catch(e){}
 
-    alert("Envío creado como PENDIENTE. En 'Envíos pendientes' puedes marcarlo como PAGADO para que cuente como venta.");
+    showOkModal("Registro exitoso","", {enter:true});
     return;
   }
 
@@ -2276,15 +2600,17 @@ async function checkout(){
   if(state.view==="inventory") renderInventory();
   updateReceiptPreview();
 
-  // Auto descargas
- // Auto descargas (solo para MOSTRADOR, no para ENVÍOS)
-if(sale.saleType !== "ENVIO"){
-  if(state.settings.autoPDF) setTimeout(()=>{
-    try{ generatePDF(); }catch(e){}
-  }, 200);
-
-  if(state.settings.autoPNG){ try{ downloadReceiptPNG(); }catch(e){} }
-}
+  // Auto descargas (solo 1 descarga automática para evitar bloqueo del navegador)
+  // Para MOSTRADOR (no ENVÍO):
+  // - Si autoPNG => descarga PNG
+  // - Si no, pero autoPDF => descarga PDF
+  if(sale.saleType !== "ENVIO"){
+    if(state.settings.autoPNG){
+      try{ await downloadReceiptPNG(); }catch(e){}
+    }else if(state.settings.autoPDF){
+      try{ generatePDF(); }catch(e){}
+    }
+  }
 
 
   // WhatsApp auto: si hay teléfono, abre chat con el recibo
@@ -2301,8 +2627,11 @@ if(sale.saleType !== "ENVIO"){
       try{ _waWin.close(); }catch(e){}
     }
   }catch(e){}
-alert("Venta registrada. Recibo listo para WhatsApp/PDF/PNG.");
-  setTimeout(()=>location.reload(), 250);
+playSaleTone();
+  try{ sessionStorage.setItem("mt_post_reload_ok", JSON.stringify({title:"Registro exitoso", msg:"Venta registrada."})); }catch(e){}
+  showCheckoutLoading("Espera un momento…");
+  setTimeout(()=>location.reload(), 3000);
+  } finally { state._checkoutBusy = false; }
 }
 
 // ---------- Shipments ----------
@@ -2517,7 +2846,11 @@ function saleToReceiptText(s){
   lines.push(`Recibo #${s.receiptNo}`);
   lines.push(`Fecha: ${d}`);
   if(status) lines.push(status);
+  if(s.payMethod==="MIXTO" && s.paySplit){
+  lines.push(`Tipo: ${s.saleType} | Pago: MIXTO (E:${money(s.paySplit.EFECTIVO||0)} + T:${money(s.paySplit.TARJETA||0)})`);
+}else{
   lines.push(`Tipo: ${s.saleType} | Pago: ${s.payMethod}`);
+}
   lines.push(`Cliente: ${client}`);
   lines.push(`Tel: ${phone}`);
   if(nitVal) lines.push(`NIT: ${nitVal}`);
@@ -2619,6 +2952,25 @@ function updateReceiptPreview(){
   try{ ensureLogosSafe($("receiptBox")); }catch(e){}
 }
 
+function handlePayMethodUI(){
+  const pm = $("payMethod")?.value || "EFECTIVO";
+  const wrap = $("mixPayWrap");
+  if(!wrap) return;
+  if(pm==="MIXTO"){
+    wrap.style.display = "";
+    // Autocompletar tarjeta con el restante
+    const subtotal = cartSubtotal();
+    const disc = cartDiscountAmount(subtotal);
+    const total = Math.max(subtotal - disc, 0);
+    const cash = Number($("mixCash")?.value || 0);
+    const card = Math.max(0, Number((total - cash).toFixed(2)));
+    if($("mixCard")) $("mixCard").value = isFinite(card) ? card : 0;
+  }else{
+    wrap.style.display = "none";
+  }
+}
+
+
 async function copyReceipt(){
   const s = state.lastReceipt || makeLiveReceipt();
   const text = saleToReceiptText(s);
@@ -2667,15 +3019,131 @@ function openWhatsApp(){
 
 
 // --- Seguridad (código para borrar/editar) ---
-function requireCode(action){
-  const code = prompt(`Ingrese el código para ${action}:`);
-  if(code===null) return false;
-  if(String(code).trim() !== "363534"){
-    alert("Código incorrecto.");
-    return false;
+// ===== CÓDIGO DE EDICIÓN (solo 1 vez por sesión) =====
+const EDIT_CODE = "363534";
+const EDIT_OK_KEY = "mb_edit_ok_v1";
+
+// ===== MODAL MENSAJE (OK) =====
+let __okModalEnter = false;
+let __okModalReload = false;
+
+function showCheckoutLoading(msg){
+  const ov = document.getElementById("checkoutLoading");
+  const m = document.getElementById("checkoutLoadingMsg");
+  if(m) m.textContent = String(msg || "Espera un momento.");
+  if(ov){
+    ov.classList.add("show");
+    ov.setAttribute("aria-hidden","false");
   }
-  return true;
 }
+function hideCheckoutLoading(){
+  const ov = document.getElementById("checkoutLoading");
+  if(ov){
+    ov.classList.remove("show");
+    ov.setAttribute("aria-hidden","true");
+  }
+}
+function postReloadOkCheck(){
+  try{
+    const s = sessionStorage.getItem("mt_post_reload_ok");
+    if(!s) return;
+    sessionStorage.removeItem("mt_post_reload_ok");
+    const o = JSON.parse(s || "{}");
+    setTimeout(()=>showOkModal(o.title || "Registro exitoso", o.msg || "Venta registrada.", {enter:true}), 120);
+  }catch(e){}
+}
+
+function showOkModal(title, msg, opts){
+  const ov = document.getElementById("okModalOverlay");
+  const t = document.getElementById("okModalTitle");
+  const m = document.getElementById("okModalMsg");
+  const b = document.getElementById("okModalBtn");
+  if(!ov || !t || !m || !b){ alert(msg || title); return; }
+  t.textContent = title || "Mensaje";
+  m.textContent = msg || "";
+  __okModalEnter = !!(opts && opts.enter);
+  __okModalReload = !!(opts && opts.reload);
+  ov.classList.add("show");
+  setTimeout(()=>{ try{ b.focus(); }catch(e){} }, 30);
+}
+function closeOkModal(){
+  const ov = document.getElementById("okModalOverlay");
+  if(ov) ov.classList.remove("show");
+  if(__okModalReload){ try{ location.reload(); }catch(e){} }
+}
+// Enter para aceptar cuando el modal está abierto
+document.addEventListener("keydown", (e)=>{
+  const ov = document.getElementById("okModalOverlay");
+  if(!ov || !ov.classList.contains("show")) return;
+  if(e.key === "Enter"){
+    e.preventDefault();
+    closeOkModal();
+  }
+});
+function showBlockedProducts(){
+  showOkModal("Modificación de productos bloqueada","", {enter:true, reload:true});
+}
+
+
+
+function requireCode(action){
+  // ya autorizado en esta pestaña
+  if(sessionStorage.getItem(EDIT_OK_KEY) === "1") return true;
+
+  // abrir modal personalizado (sin prompt del navegador)
+  openEditCodeModal(action);
+  return false; // el usuario reintenta el botón después de autorizar
+}
+
+
+function logoutAdmin(){
+  try{ sessionStorage.removeItem(EDIT_OK_KEY); }catch(e){}
+  try{ closeEditCodeModal(); }catch(e){}
+}
+
+function openEditCodeModal(action){
+  const ov = document.getElementById("editCodeOverlay");
+  const title = document.getElementById("editCodeTitle");
+  const msg = document.getElementById("editCodeMsg");
+  const inp = document.getElementById("editCodeInput");
+
+  if(!ov || !inp) return alert("No se pudo abrir el cuadro de código.");
+
+  title.textContent = "Acceso requerido";
+  msg.textContent = `Ingrese el código para ${action}:`;
+  inp.value = "";
+  ov.classList.add("show");
+
+  setTimeout(()=>{ try{ inp.focus(); }catch(e){} }, 30);
+}
+
+function closeEditCodeModal(){
+  const ov = document.getElementById("editCodeOverlay");
+  if(ov) ov.classList.remove("show");
+}
+
+function confirmEditCode(){
+  const inp = document.getElementById("editCodeInput");
+  const err = document.getElementById("editCodeErr");
+  const code = (inp && inp.value ? String(inp.value).trim() : "");
+  if(code !== EDIT_CODE){
+    // único mensaje permitido
+    showBlockedProducts();
+    return;
+  }
+  sessionStorage.setItem(EDIT_OK_KEY, "1");
+  if(err) err.textContent = "";
+  closeEditCodeModal();
+  }
+
+// Cerrar modal con ESC
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){
+    const ov = document.getElementById("editCodeOverlay");
+    if(ov && ov.classList.contains("show")) closeEditCodeModal();
+  }
+});
+
 
 // --- Seguridad (código para backup/restore) ---
 function requireBackupCode(action){
@@ -2970,6 +3438,13 @@ function fitEnvLabelToBox(node){
 // PNG (preferir html2canvas; fallback SVG)
 // PNG (preferir html2canvas; fallback SVG)
 async function downloadReceiptPNG(){
+  // Evitar doble descarga (el navegador bloquea descargas múltiples)
+  const now = Date.now();
+  if(state && state._dlInProgress) return;
+  if(state && state._dlLock && (now - state._dlLock) < 8000) return;
+  if(state){ state._dlLock = now; state._dlInProgress = true; }
+
+  try{
   const s = state.lastReceipt || makeLiveReceipt();
   const isEnv = (s.saleType === "ENVIO");
 
@@ -3065,6 +3540,9 @@ async function downloadReceiptPNG(){
     alert("Tu navegador bloqueó el PNG. Usa PDF o Copiar texto.");
   };
   img.src = url;
+  }finally{
+    if(state) state._dlInProgress = false;
+  }
 }
 
 function receiptToPrintableHTML(s){
@@ -3151,7 +3629,32 @@ function receiptToPrintableHTML(s){
         body{ background:#fff; }
         .box{ border:none; border-radius:0; }
       }
-    </style>
+    
+/* ===== LOADING SPINNER (COBRAR) ===== */
+#checkoutLoading.ok-modal{ z-index:9999; }
+.loading-card{
+  width:min(420px,100%);
+  background:linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  overflow:hidden;
+  color:#fff;
+}
+.loading-body{ padding:18px; display:flex; align-items:center; gap:14px; }
+.loading-spinner{
+  width:56px; height:56px;
+  border-radius:999px;
+  border:6px solid rgba(255,255,255,.20);
+  border-top-color: var(--pink);
+  animation: spin 1s linear infinite;
+  flex:0 0 auto;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.loading-text b{ display:block; font-weight:1000; letter-spacing:.2px; }
+.loading-text small{ display:block; margin-top:4px; opacity:.85; font-weight:800; }
+
+</style>
 
     <script>
       // Ajusta el contenido SOLO para ENVÍO (10x10) bajando font-size si se desborda
@@ -3299,6 +3802,9 @@ window.addEventListener('load', function(){
 
 
 function generatePDF(){
+  const now = Date.now();
+  if(state && state._pdfLock && (now - state._pdfLock) < 1500) return;
+  if(state) state._pdfLock = now;
   const s = state.lastReceipt || makeLiveReceipt();
 
   if(s.saleType === "ENVIO"){
@@ -3450,7 +3956,32 @@ function closeToPrintableHTML(c){
     .box{ border:none; border-radius:0; }
   }
 
-    </style>
+    
+/* ===== LOADING SPINNER (COBRAR) ===== */
+#checkoutLoading.ok-modal{ z-index:9999; }
+.loading-card{
+  width:min(420px,100%);
+  background:linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  overflow:hidden;
+  color:#fff;
+}
+.loading-body{ padding:18px; display:flex; align-items:center; gap:14px; }
+.loading-spinner{
+  width:56px; height:56px;
+  border-radius:999px;
+  border:6px solid rgba(255,255,255,.20);
+  border-top-color: var(--pink);
+  animation: spin 1s linear infinite;
+  flex:0 0 auto;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.loading-text b{ display:block; font-weight:1000; letter-spacing:.2px; }
+.loading-text small{ display:block; margin-top:4px; opacity:.85; font-weight:800; }
+
+</style>
   </head>
   <body onload="setTimeout(function(){window.print();},250)">
     <div class="box">
@@ -3508,16 +4039,31 @@ async function buildClose(){
   let fromHHMM = rawFrom;
   let toHHMM   = rawTo;
 
-  // ✅ Si no defines rango manual, usamos TURNO (desde shiftStartTs hasta ahora)
-  if((!fromHHMM || !toHHMM) && dateKey===todayKey()){
-    const shiftStart = await getShiftStartTs();
-    if(shiftStart){
-      const a = new Date(Number(shiftStart));
-      const b = new Date();
-      if(!fromHHMM) fromHHMM = a.toTimeString().slice(0,5);
-      if(!toHHMM)   toHHMM   = b.toTimeString().slice(0,5);
-      if(!rawFrom) $("closeFrom").value = fromHHMM;
-      if(!rawTo)   $("closeTo").value   = toHHMM;
+  // ✅ Si no defines rango manual, usamos TURNO (desde el último cierre guardado hasta ahora)
+  // Regla: se hacen varios cierres en el día => el siguiente cierre SOLO toma ventas DESPUÉS del último cierre.
+  let autoStartTs = null;
+  let autoEndTs = null;
+
+  // ✅ TURNO: siempre cortamos por último cierre (y/o inicio de turno) cuando la fecha es HOY.
+  // Esto permite varios cierres en el día: cada cierre toma ventas DESPUÉS del último cierre guardado.
+  if(dateKey===todayKey()){
+    const shiftStart = await getShiftStartTs();                // inicio de turno (meta)
+    const lastClose  = await getLastCloseTs(dateKey);          // último cierre guardado (meta)
+    const startTs    = Math.max(Number(shiftStart||0), Number(lastClose||0)) || null;
+
+    if(startTs){
+      autoStartTs = startTs;
+      autoEndTs   = Date.now();
+
+      // Si el usuario no definió rango manual, autollenamos HH:MM desde el corte
+      if((!fromHHMM || !toHHMM)){
+        const a = new Date(startTs);
+        const b = new Date(autoEndTs);
+        if(!fromHHMM) fromHHMM = a.toTimeString().slice(0,5);
+        if(!toHHMM)   toHHMM   = b.toTimeString().slice(0,5);
+        if(!rawFrom) $("closeFrom").value = fromHHMM;
+        if(!rawTo)   $("closeTo").value   = toHHMM;
+      }
     }
   }
 
@@ -3525,7 +4071,12 @@ async function buildClose(){
   toHHMM   = toHHMM   || "23:59";
 
   const all = await idbAll("sales");
-  const list = all.filter(s=> isWithinDateRange(s.ts, dateKey, fromHHMM, toHHMM)).sort((a,b)=>a.ts-b.ts);
+  let list = all.filter(s=> isWithinDateRange(s.ts, dateKey, fromHHMM, toHHMM)).sort((a,b)=>a.ts-b.ts);
+
+  // Si estamos en modo TURNO automático, aseguramos corte por timestamp (no solo HH:MM)
+  if(autoStartTs && autoEndTs){
+    list = list.filter(s=> (Number(s.ts||0) >= autoStartTs) && (Number(s.ts||0) <= autoEndTs));
+  }
 
   const pay = {EFECTIVO:0, TARJETA:0, TRANSFERENCIA:0};
   let subtotal = 0;
@@ -3543,7 +4094,12 @@ async function buildClose(){
 
     if(s.saleType==="ENVIO") envioCount++; else mostradorCount++;
 
-    pay[s.payMethod] = (pay[s.payMethod]||0) + Number(s.total||0);
+    if(s.payMethod==="MIXTO" && s.paySplit){
+      pay.EFECTIVO = (pay.EFECTIVO||0) + Number(s.paySplit.EFECTIVO||0);
+      pay.TARJETA  = (pay.TARJETA||0)  + Number(s.paySplit.TARJETA||0);
+    }else{
+      pay[s.payMethod] = (pay[s.payMethod]||0) + Number(s.total||0);
+    }
 
     for(const it of (s.items||[])){
       const key = it.code;
@@ -3670,6 +4226,7 @@ async function saveClose(){
   const c = {...state.lastClose};
   c.id = "C-" + c.ts + "-" + Math.random().toString(16).slice(2,8);
   await idbPut("closes", c);
+  await setLastCloseTs(c.dateKey, c.ts);
 
   await clearPaidShipments();
   await renderSavedCloses();
@@ -3694,7 +4251,7 @@ async function saveClose(){
   state.lastClose = null;
   await buildClose();
 
-  alert("Cierre guardado ✅");
+  showOkModal("Registro exitoso","Cierre guardado.", {enter:true});;
 }
 
 
@@ -3991,7 +4548,11 @@ async function refreshKPIs(){
   const pending = shipments.filter(s=> (s.status||"PENDIENTE")==="PENDIENTE").length;
 
   const kClients = $("kClients"); if(kClients) kClients.textContent = clients.length;
-  const kProducts= $("kProducts"); if(kProducts) kProducts.textContent = products.length;
+
+  // ✅ Productos vendidos en el TURNO (suma de cantidades de items)
+  const soldQty = turnoSales.reduce((acc,s)=> acc + (Array.isArray(s.items) ? s.items.reduce((a,it)=>a+Number(it.qty||0),0) : 0), 0);
+
+  const kProducts= $("kProducts"); if(kProducts) kProducts.textContent = String(soldQty);
   const kSalesToday = $("kSalesToday"); if(kSalesToday) kSalesToday.textContent = turnoSales.length;
   const kTotalToday = $("kTotalToday"); if(kTotalToday) kTotalToday.textContent = money(total);
   const kShipPending= $("kShipPending"); if(kShipPending) kShipPending.textContent = pending;
@@ -4114,7 +4675,7 @@ async function saveSettings(){
 
   await idbPut("meta",{key:"settings", value: state.settings});
   renderPayMethodSelect();
-  alert("Ajustes guardados.");
+  showOkModal("Registro exitoso","Ajustes guardados.", {enter:true});;
   updateReceiptPreview();
   buildClose();
 }
@@ -4244,10 +4805,28 @@ if(btnRange){
 
   // Nav
   $("nav").addEventListener("click",(e)=>{
+    // Acción: ir al formulario de productos
+    const act = e.target.closest("button[data-action]");
+    if(act && act.dataset.action === "prodform"){
+      if(!appReady) return;
+      setView("products");
+      // cerrar menú
+      try{ $("nav").classList.add("hide"); }catch(e){}
+      // bajar al formulario
+      setTimeout(()=>{
+        const form = $("prodFormCard");
+        if(form) form.scrollIntoView({behavior:"smooth", block:"start"});
+        try{ $("pCode") && $("pCode").focus(); }catch(e){}
+      }, 60);
+      return;
+    }
+
     const btn = e.target.closest("button[data-view]");
     if(!btn) return;
     if(!appReady) return;
     setView(btn.dataset.view);
+    // cerrar menú
+    try{ $("nav").classList.add("hide"); }catch(e){}
   });
 
   // Hamburger toggle
@@ -4274,6 +4853,7 @@ onClick("btnClearDisc", ()=>{
   // Inventory
   $("invSearch").addEventListener("input", ()=>{ if(state.view==="inventory") renderInventory(); });
   $("btnInvRefresh").addEventListener("click", renderInventory);
+  $("btnInvExportXLS").addEventListener("click", exportInventoryExcel);
 
   // Shipments
   $("shipSearch").addEventListener("input", renderShipments);
@@ -4292,6 +4872,7 @@ onClick("btnClearDisc", ()=>{
         state.lastReceipt = s;
         updateReceiptPreview();
         setView("pos");
+    postReloadOkCheck();
         alert("Envío cargado en vista POS. Puedes generar WhatsApp/PDF/PNG. (No cuenta como venta hasta PAGADO)");
       }
     }
@@ -4437,10 +5018,13 @@ $("saleType").addEventListener("change", ()=>{
 });
 
 
-  $("payMethod").addEventListener("change", updateReceiptPreview);
+  $("payMethod").addEventListener("change", ()=>{ handlePayMethodUI(); updateReceiptPreview(); });
+  $("mixCash")?.addEventListener("input", ()=>{ handlePayMethodUI(); updateReceiptPreview(); });
+  $("mixCard")?.addEventListener("input", ()=>{ updateReceiptPreview(); });
+
 
   // Checkout
-  $("btnCheckout").addEventListener("click", checkout);
+  $("btnCheckout").addEventListener("click", ()=>{ try{ playSaleTone(); }catch(e){} return checkout(); });
 
   // Receipt buttons
   $("btnCopyReceipt").addEventListener("click", copyReceipt);
@@ -4459,6 +5043,7 @@ $("saleType").addEventListener("change", ()=>{
         state.selectedClient = c;
         $("cPhone").value=c.phone; $("cNames").value=c.names; $("cLast").value=c.last; if($("cNit")) $("cNit").value=c.nit||""; $("cAddr").value=c.addr; $("cIndic").value=c.indic||"";
         setView("pos");
+    postReloadOkCheck();
         updateReceiptPreview();
       }
     }
@@ -4478,6 +5063,8 @@ $("saleType").addEventListener("change", ()=>{
 
   // Products actions
   $("btnSaveProduct").addEventListener("click", saveProductFromForm);
+  const _logoutBtn = $("btnLogoutAdmin");
+  if(_logoutBtn) _logoutBtn.addEventListener("click", ()=>{ try{ logoutAdmin(); }catch(e){} });
   $("prodSearch").addEventListener("input", renderProducts);
   $("btnProdRefresh").addEventListener("click", ()=>{ renderProducts(); refreshProductPicker(); });
 
@@ -4492,8 +5079,11 @@ $("saleType").addEventListener("change", ()=>{
       $("pCode").value = p.code;
       $("pName").value = p.name;
       $("pPrice").value= p.price;
+      $("pCost").value= (p.cost ?? 0);
       $("pStock").value= p.stock;
       $("pCode").focus();
+      const form = $("prodFormCard");
+      if(form) form.scrollIntoView({behavior:"smooth", block:"start"});
     }
     if(del){
       if(!requireCode("borrar producto")) return;
@@ -4506,6 +5096,13 @@ $("saleType").addEventListener("change", ()=>{
         renderInventory();
       }
     }
+  });
+
+  // Scroll a formulario crear/modificar
+  onClick("btnGoProdForm", ()=>{
+    const el = $("prodFormCard");
+    if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+    try{ $("pCode")?.focus(); }catch(e){}
   });
 
   // Reports actions
@@ -4524,6 +5121,7 @@ onClick("btnRepMonthly", ()=>renderReport("monthly"));
         state.lastReceipt = s;
         updateReceiptPreview();
         setView("pos");
+    postReloadOkCheck();
         alert("Recibo cargado en vista POS. Puedes copiar/WhatsApp/PNG/PDF.");
       }
     }
@@ -4598,6 +5196,53 @@ if(btnSave) btnSave.addEventListener("click", saveSettings);
     el.addEventListener("change", ()=>renderKardex());
   });
 
+
+  // Crear producto desde panel del generador
+  const _btnGenCreate = document.getElementById("btnGenCreateProd");
+  if(_btnGenCreate){
+    _btnGenCreate.addEventListener("click", async ()=>{
+      try{
+        const code = (document.getElementById("genPCode")?.value || "").trim();
+        const name = (document.getElementById("genPName")?.value || "").trim();
+        const price = Number(document.getElementById("genPPrice")?.value || 0);
+        const cost  = Number(document.getElementById("genPCost")?.value || 0);
+        const stock = Number(document.getElementById("genPStock")?.value || 0);
+        if(!code) return alert("Ingrese Código (SKU/barras).");
+        if(!name) return alert("Ingrese Nombre.");
+        if(!isFinite(price) || price<0) return alert("Precio inválido.");
+        if(!isFinite(cost)  || cost<0)  return alert("Costo inválido.");
+        if(!isFinite(stock) || stock<0) return alert("Stock inválido.");
+
+        const exists = await idbGet("products", code);
+        if(exists){
+          if(!requireCode("editar producto")) return;
+        }
+        await idbPut("products", {
+          code, name,
+          price: Number(price.toFixed(2)),
+          cost:  Number(cost.toFixed(2)),
+          stock: Math.floor(stock),
+          nameKey: normKey(name),
+          updatedAt: Date.now()
+        });
+        await logMovement({ ts: Date.now(), code, name, delta: Math.floor(stock) - Math.floor(Number(exists?.stock||0)), note: "Creado/actualizado desde Generador" });
+
+        // limpiar campos
+        ["genPCode","genPName","genPPrice","genPCost","genPStock"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+
+        // refrescar tablas
+        try{ await renderProducts(); }catch(e){}
+        try{ await renderInventory(); }catch(e){}
+        // reenviar inventario al generador
+        try{ sendInventoryToLabels(); setTimeout(sendInventoryToLabels, 250); }catch(e){}
+        alert("Producto guardado en inventario.");
+      }catch(err){
+        console.error(err);
+        alert("No se pudo guardar el producto: " + err.message);
+      }
+    });
+  }
+
 }
 
 // ---------- Init ----------
@@ -4629,6 +5274,7 @@ if(btnSave) btnSave.addEventListener("click", saveSettings);
     if(cd && !cd.value) cd.value = todayKey();
 
     setView("pos");
+    postReloadOkCheck();
   }catch(err){
     console.error(err);
     alert("Error iniciando el sistema: " + (err?.message || err));
@@ -4644,7 +5290,8 @@ if(btnSave) btnSave.addEventListener("click", saveSettings);
     await refreshProductPicker();
 
     wireEvents();            // Ahora sí conecta todos los botones
-    setView("pos");          // Entra directo al POS
+    setView("pos");
+    postReloadOkCheck();          // Entra directo al POS
   }catch(err){
     console.error(err);
     alert("Error inicializando el sistema: " + err.message);
@@ -4652,6 +5299,1482 @@ if(btnSave) btnSave.addEventListener("click", saveSettings);
 })();
 
 
+
+/* ===== Integración: Generador de Etiquetas dentro de MTR ONLINE AP ===== */
+const __GEN_LABELS_SRCDOC__ = `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>GENERADOR — Etiquetas  | MarckBusiness</title>
+
+  <script>try{Object.defineProperty(window,"localStorage",{value:{getItem:()=>null,setItem:()=>{},removeItem:()=>{},clear:()=>{}},configurable:true});Object.defineProperty(window,"sessionStorage",{value:{getItem:()=>null,setItem:()=>{},removeItem:()=>{},clear:()=>{}},configurable:true});}catch(e){}<\/script>
+
+  <!-- Librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"><\/script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1b2f;
+      --card:#0b1628;
+      --text:#eaf1ff;
+      --muted:#9fb0c8;
+      --accent:#2b7cff;
+      --accent2:#1dd3b0;
+      --ok:#22c55e;
+      --danger:#ef4444;
+      --border:rgba(255,255,255,.10);
+      --shadow:0 16px 50px rgba(0,0,0,.55);
+      --radius:18px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(900px 650px at 10% 0%, rgba(43,124,255,.18), transparent 55%),
+        radial-gradient(900px 650px at 90% 0%, rgba(29,211,176,.14), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%),
+        var(--bg);
+      min-height:100vh;
+    }
+
+    /* ---------- Layout ---------- */
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
+    .top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .brand{display:flex;gap:12px;align-items:center;min-width:260px}
+    .brand h1{margin:0;font-size:18px;font-weight:1000;letter-spacing:.2px}
+    .brand p{margin:2px 0 0;color:var(--muted);font-weight:850;font-size:13px}
+
+    .logoImg{
+      width:48px;height:48px;border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 16px 34px rgba(43,124,255,.14);
+      overflow:hidden;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .logoImg img{width:100%;height:100%;object-fit:contain;padding:6px;display:block;}
+
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:8px 12px;border-radius:999px;
+      border:1px solid rgba(43,124,255,.35);
+      background:rgba(43,124,255,.10);
+      font-weight:1000;color:#cfe4ff;
+      user-select:none;white-space:nowrap;
+    }
+
+    .grid{display:grid;grid-template-columns: 1.05fr .95fr;gap:14px}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      background: rgba(15, 27, 47, .76);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      overflow:hidden;
+      position:relative;
+    }
+    .card:before{
+      content:"";position:absolute;inset:-2px;
+      background:linear-gradient(135deg, rgba(43,124,255,.18), transparent 38%, rgba(29,211,176,.12));
+      filter:blur(18px);opacity:.55;pointer-events:none;
+    }
+    .card > *{position:relative; z-index:1}
+    .card h2{margin:0 0 10px;font-size:15px;font-weight:1000}
+    .muted{color:var(--muted);font-weight:850;font-size:13px;line-height:1.35}
+
+    .form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field.full{grid-column:1/-1}
+    label{font-size:12px;color:var(--muted);font-weight:950;letter-spacing:.2px}
+
+    input, select{
+      width:100%;
+      padding:12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(11, 22, 40, .85);
+      color:var(--text);
+      outline:none;
+      font-weight:950;
+    }
+    input:focus, select:focus{
+      border-color: rgba(43,124,255,.55);
+      box-shadow: 0 0 0 4px rgba(43,124,255,.14);
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .row .grow{flex:1;min-width:220px}
+
+    .btn{
+      border:none;cursor:pointer;
+      padding:11px 14px;border-radius:14px;
+      font-weight:1000;color:#fff;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      box-shadow: 0 14px 30px rgba(43,124,255,.20);
+      transition: transform .15s ease, filter .15s ease;
+      text-decoration:none; /* para <a class="btn"> */
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .btn:hover{transform:translateY(-1px);filter:saturate(1.05)}
+    .btn:active{transform:translateY(0)}
+    .btn.secondary{background:#0b1628;border:1px solid var(--border);box-shadow:none;color:var(--text)}
+    .btn.danger{background:linear-gradient(90deg,#ef4444,#b91c1c)}
+    .btn.small{padding:9px 12px;border-radius:12px}
+
+    /* ========= BOTÓN ROSADO (NUEVO) ========= */
+    .btn-pink{
+      background: linear-gradient(90deg, #ff4fb7, #fb7185);
+      box-shadow: 0 14px 30px rgba(255,79,183,.35);
+      color:#fff;
+    }
+    .btn-pink:hover{
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    table{width:100%;border-collapse:collapse;margin-top:12px;overflow:hidden;border-radius:14px;border:1px solid var(--border)}
+    th,td{padding:10px 10px;border-bottom:1px solid var(--border);text-align:left;font-weight:900;font-size:13px;vertical-align:top}
+    th{background:rgba(43,124,255,.12);color:#cfe4ff}
+    tr:last-child td{border-bottom:none}
+    td small{color:var(--muted);font-weight:900}
+
+    /* -------- Vista previa mejorada para lectura -------- */
+    .previewWrap{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;margin-top:10px}
+    .labelPreview{
+      background:#fff;color:#111;border-radius:14px;
+      padding:10px;border:1px solid rgba(0,0,0,.12);
+      width:340px;max-width:100%;
+      transform-origin:top left;
+    }
+    .labelPreview .line1{display:flex;justify-content:space-between;gap:10px;font-weight:1000}
+    .labelPreview .name{font-size:15px;max-width:68%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .labelPreview .price{font-size:16px}
+
+    /* Área blanca (quiet zone) + barras grandes */
+    .barcodeBox{
+      margin-top:8px;
+      background:#fff;
+      padding:6px;               /* quiet zone */
+      border:2px solid #000;     /* contraste */
+      border-radius:10px;
+    }
+    .labelPreview svg{width:100%;height:68px;display:block}
+
+    .footer{margin-top:14px;color:rgba(255,255,255,.65);font-weight:900;font-size:12px;text-align:center}
+    .footer b{color:#cfe4ff}
+
+    .toast{
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+      background:rgba(17,24,39,.92);border:1px solid rgba(255,255,255,.12);
+      padding:10px 12px;border-radius:14px;color:#fff;font-weight:950;
+      box-shadow:0 20px 44px rgba(0,0,0,.45);
+      opacity:0;pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+      z-index:50;
+    }
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+    /* ---------- Login Overlay ---------- */
+    .loginOverlay{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(900px 650px at 10% 0%, rgba(43,124,255,.20), transparent 55%),
+        radial-gradient(900px 650px at 90% 0%, rgba(29,211,176,.16), transparent 55%),
+        rgba(0,0,0,.55);
+      display:flex;align-items:center;justify-content:center;
+      padding:18px;z-index:1000;
+    }
+    .loginBox{
+      width:min(560px, 100%);
+      background: rgba(15,27,47,.88);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 22px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.60);
+      padding:16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .loginBox:before{
+      content:""; position:absolute; inset:-2px;
+      background:linear-gradient(135deg, rgba(43,124,255,.22), transparent 40%, rgba(29,211,176,.16));
+      filter:blur(18px); opacity:.6; pointer-events:none;
+    }
+    .loginBox > *{ position:relative; z-index:1; }
+    .loginHead{
+      display:flex; gap:12px; align-items:center;
+      padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.10);
+      margin-bottom:12px;
+    }
+    .loginTitle{display:flex; flex-direction:column; gap:2px}
+    .loginTitle b{font-size:16px; font-weight:1000}
+    .loginTitle small{color:var(--muted); font-weight:900}
+    .loginForm{display:grid; grid-template-columns: 1fr; gap:10px; margin-top:10px;}
+    .loginRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .loginRow input{flex:1; min-width:220px}
+    .topRightActions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+  
+/* ===== LOADING SPINNER (COBRAR) ===== */
+#checkoutLoading.ok-modal{ z-index:9999; }
+.loading-card{
+  width:min(420px,100%);
+  background:linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+  overflow:hidden;
+  color:#fff;
+}
+.loading-body{ padding:18px; display:flex; align-items:center; gap:14px; }
+.loading-spinner{
+  width:56px; height:56px;
+  border-radius:999px;
+  border:6px solid rgba(255,255,255,.20);
+  border-top-color: var(--pink);
+  animation: spin 1s linear infinite;
+  flex:0 0 auto;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+.loading-text b{ display:block; font-weight:1000; letter-spacing:.2px; }
+.loading-text small{ display:block; margin-top:4px; opacity:.85; font-weight:800; }
+
+
+/* ===== Ajustes UI: un solo creador (con costo) + cola arriba ===== */
+#legacyProductCreator > h2,
+#legacyProductCreator > .form { display:none !important; }
+
+.grid{ display:flex !important; flex-direction:column !important; gap:14px !important; }
+#queueCard{ order:0 !important; }
+#legacyProductCreator{ order:1 !important; }
+
+/* ocultar accesos/creadores viejos dentro del generador */
+#btnNext, #btnClearForm { display:none !important; }
+
+/* botón compacto */
+#btnOpenCreateCost{ padding:8px 10px !important; border-radius:12px !important; }
+
+/* inputs compactos */
+#dlgCreateCost input{ border-radius:12px !important; }
+
+</style>
+</head>
+
+<body>
+  <!-- LOGIN -->
+  <div class="loginOverlay" id="loginOverlay" style="display:none">
+    <div class="loginBox">
+      <div class="loginHead">
+        <div class="logoImg" style="width:54px;height:54px;border-radius:16px">
+          <img id="loginLogo" src="./LOGO1.png" alt="LOGO1" onerror="this.style.display='none'">
+        </div>
+        <div class="loginTitle">
+          <b>Iniciar sesión</b>
+          <small>Ingresa el código para usar el generador</small>
+        </div>
+      </div>
+
+      <div class="loginForm">
+        <div class="field full">
+          <label>Código</label>
+          <input id="loginCode" type="password" inputmode="numeric" placeholder="••••••" autocomplete="off">
+          <div class="muted">Código requerido: <b>********</b></div>
+        </div>
+
+        <div class="loginRow">
+          <button class="btn" id="btnLogin" type="button">Entrar</button>
+          <button class="btn secondary" id="btnLoginClear" type="button">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:10px">
+       MarckBusiness ©2026 todos los derechos reservados.
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="wrap" id="appWrap" style="display:block">
+    <div class="top">
+      <div class="brand">
+        <div class="logoImg" title="LOGO1 (solo en el sitio)">
+          <img id="siteLogo" src="./LOGO1.png" alt="LOGO1">
+        </div>
+        <div>
+          <h1>GENERADOR — Etiquetas (PDF)</h1>
+          <p>MT ROPA ONLINE </p>
+        </div>
+      </div>
+
+      <div class="topRightActions">
+        <div class="pill">PAGO AL DIA 👍</div>
+
+       
+        
+        <button class="btn secondary" id="btnLogout" type="button">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="legacyProductCreator" style="display:none">
+        <h2>Producto</h2>
+        <div class="form">
+          <div class="field">
+            <label>CODIGO 5 DIGITOS</label>
+            <div class="row">
+              <input id="pCode" class="grow" inputmode="numeric" maxlength="5" placeholder="Ej: 00001"/>
+              <button class="btn small secondary" id="btnNext" type="button">Siguiente</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Precio (Q)</label>
+            <input id="pPrice" type="number" min="0" step="0.01" placeholder="Ej: 129.00"/>
+          </div>
+
+          <!-- STOCK (nuevo) -->
+          <div class="field">
+            <label>Stock</label>
+            <input id="pStock" type="number" min="0" step="1" value="0" placeholder="Ej: 10"/>
+          </div>
+
+          <div class="field full">
+            <label>Nombre</label>
+            <input id="pName" placeholder="Ej: Camisa Oxford"/>
+          </div>
+          <div class="field full">
+            <div class="row">
+              <button class="btn" id="btnSave" type="button">Guardar</button>
+              <button class="btn secondary" id="btnClearForm" type="button">Limpiar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="previewWrap">
+          <div>
+            <div class="muted"><b>Vista previa</b> </div>
+            <div class="labelPreview" id="previewBox">
+              <div class="line1">
+                <div class="name" id="pvName">—</div>
+                <div class="price" id="pvPrice">Q0.00</div>
+              </div>
+
+              <div class="barcodeBox">
+                <svg id="pvBarcode"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="queueCard">
+        <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+          <h2 style="margin:0">Cola (PDF)</h2>
+</div>
+        <div class="row">
+          <input id="qSearch" class="grow" placeholder="Buscar por CODIGO O NOMBRE"/>
+          <button class="btn secondary" id="btnRefresh" type="button">Refrescar</button>
+          <button class="btn danger" id="btnWipe" type="button">Borrar todo</button>
+        </div>
+
+        <div class="form" style="margin-top:10px">
+          <div class="field">
+            <label>Producto</label>
+            <select id="pick"></select>
+          </div>
+
+          <div class="field">
+            <label>Cantidad</label>
+            <input id="qty" type="number" min="1" value="1"/>
+          </div>
+
+          <!-- tamaño: 50x25 por defecto -->
+          <div class="field">
+            <label>Ancho etiqueta (mm)</label>
+            <input id="lblW" type="number" min="20" step="0.1" value="50"/>
+          </div>
+
+          <div class="field">
+            <label>Alto etiqueta (mm)</label>
+            <input id="lblH" type="number" min="20" step="0.1" value="25"/>
+          </div>
+
+          <!-- horizontal fijo (igual lo dejo por si algún día cambias) -->
+          <div class="field full">
+            <label>Orientación</label>
+            <select id="lblOri">
+              <option value="landscape" selected>Horizontal</option>
+              <option value="portrait">Vertical</option>
+              <option value="AUTO">Automática (según ancho/alto)</option>
+            </select>
+            <div class="muted" style="margin-top:6px">
+              Para 50×25 usa <b>Horizontal</b>.
+            </div>
+          </div>
+
+          <div class="field full">
+            <div class="row">
+              <button class="btn" id="btnAddToQueue" type="button">Agregar</button>
+              <button class="btn secondary" id="btnClearQueue" type="button">Limpiar cola</button>
+              <button class="btn" id="btnPDF" type="button">Abrir PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>SKU</th><th>Nombre</th><th>Precio</th><th>Cant.</th><th style="width:140px">Acción</th></tr>
+          </thead>
+          <tbody id="queueBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Importar / Exportar</h2>
+      <div class="row">
+        <button class="btn secondary" id="btnExcel" type="button">Importar Excel</button>
+        <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display:none"/>
+        <button class="btn secondary" id="btnExport" type="button">Exportar JSON</button>
+      </div>
+      <div class="muted" style="margin-top:8px">
+        Excel esperado: columnas <b>SKU</b>, <b>NOMBRE</b>, <b>PRECIO</b> (opcional: <b>STOCK</b>).
+      </div>
+    </div>
+
+    <div class="footer">
+      Hecho por <b>MarckBusiness</b> — © 2025 Todos los derechos reservados.
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   GENERADOR Etiquetas (IndexedDB)
+   AJUSTE: Etiquetas 50x25mm horizontales (solo: BARCODE + NOMBRE + PRECIO)
+   BARCODE más fuerte para pistola
+============================================================ */
+
+const LOGIN_CODE = "363534";
+const LOGIN_KEY  = "mb_labels_logged_in_v1";
+
+const DB_NAME="generador_etiquetas_marckbusiness_v3";
+const DB_VER=1;
+let db;
+
+const $=id=>document.getElementById(id);
+const state={queue:[]};
+
+function toast(msg){
+  const t=$("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+function money(n){return "Q"+(Number(n||0)).toFixed(2); }
+function norm(s){return String(s||"").trim().toLowerCase().replace(/\\s+/g," ");}
+
+function pad5(n){return String(n).padStart(5,"0");}
+function validateCode5(code){return /^\\d{5}$/.test(code);}
+
+// ---------- Login ----------
+function isLoggedIn(){ return localStorage.getItem(LOGIN_KEY)==="1"; }
+function showLogin(){
+  $("loginOverlay").style.display="flex";
+  $("appWrap").style.display="none";
+  setTimeout(()=>{ $("loginCode").focus(); }, 50);
+}
+function showApp(){
+  $("loginOverlay").style.display="none";
+  $("appWrap").style.display="block";
+}
+function doLogin(){
+  const v = String($("loginCode").value||"").trim();
+  if(v !== LOGIN_CODE){
+    alert("Código incorrecto.");
+    $("loginCode").focus();
+    $("loginCode").select();
+    return;
+  }
+  localStorage.setItem(LOGIN_KEY,"1");
+  toast("Sesión iniciada");
+  showApp();
+}
+function doLogout(){
+  if(confirm("¿Cerrar sesión?")){
+    localStorage.removeItem(LOGIN_KEY);
+    toast("Sesión cerrada");
+    showLogin();
+  }
+}
+
+// ---------- IndexedDB ----------
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains("products")){
+        const s=d.createObjectStore("products",{keyPath:"code"});
+        s.createIndex("name","nameKey",{unique:false});
+      }
+      if(!d.objectStoreNames.contains("meta")) d.createObjectStore("meta",{keyPath:"key"});
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+function tx(store,mode="readonly"){return db.transaction(store,mode).objectStore(store);}
+function idbGet(store,key){
+  return new Promise((res,rej)=>{
+    const r=tx(store).get(key);
+    r.onsuccess=()=>res(r.result||null);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbPut(store,val){
+  return new Promise((res,rej)=>{
+    const r=tx(store,"readwrite").put(val);
+    r.onsuccess=()=>res(true);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbAll(store){
+  return new Promise((res,rej)=>{
+    const r=tx(store).getAll();
+    r.onsuccess=()=>res(r.result||[]);
+    r.onerror=()=>rej(r.error);
+  });
+}
+function idbClear(){
+  return Promise.all([
+    new Promise((res,rej)=>{
+      const r=db.transaction("products","readwrite").objectStore("products").clear();
+      r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error);
+    }),
+    new Promise((res,rej)=>{
+      const r=db.transaction("meta","readwrite").objectStore("meta").clear();
+      r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error);
+    })
+  ]);
+}
+
+async function nextCode(){
+  const meta=await idbGet("meta","next");
+  const n=meta?.value?Number(meta.value):1;
+  await idbPut("meta",{key:"next",value:n+1});
+  return pad5(n);
+}
+
+// ---------- BARCODE fuerte (para escáner) ----------
+function drawBarcodeToSVG(svgEl, code){
+  svgEl.innerHTML="";
+  if(!validateCode5(code)) return;
+
+  try{
+    JsBarcode(svgEl, code, {
+      format:"CODE128",
+      displayValue:false,
+      margin:0,
+      height:58,
+      width:2.6,
+      background:"#ffffff",
+      lineColor:"#000000"
+    });
+  }catch(e){}
+}
+
+// ---------- Preview ----------
+function renderPreview(){
+  const code=$("pCode").value.trim()||"00000";
+  const name=$("pName").value.trim()||"—";
+  const price=Number($("pPrice").value||0);
+
+  $("pvName").textContent=name;
+  $("pvPrice").textContent=money(price);
+
+  drawBarcodeToSVG($("pvBarcode"), code);
+}
+
+// ---------- Products ----------
+async function saveProduct(){
+  const code=$("pCode").value.trim();
+  const name=$("pName").value.trim();
+  const price=Number($("pPrice").value);
+
+  // STOCK (nuevo): opcional, default 0, no altera nada más
+  const stock = Math.max(0, Math.floor(Number($("pStock")?.value || 0)));
+
+  if(!validateCode5(code)) return alert("SKU inválido.");
+  if(!name) return alert("Nombre requerido.");
+  if(isNaN(price)||price<0) return alert("Precio inválido.");
+
+  // STOCK (nuevo) guardado en el producto
+  const p={code,name,price:Number(price.toFixed(2)),stock, nameKey:norm(name),updatedAt:Date.now()};
+  await idbPut("products",p);
+
+  await refreshPicker();
+  $("pCode").value=await nextCode();
+  $("pName").value="";
+  $("pPrice").value="";
+  // STOCK (nuevo) reseteo del campo
+  if($("pStock")) $("pStock").value="0";
+
+  renderPreview();
+  toast("Guardado");
+}
+
+async function refreshPicker(){
+  const q=norm($("qSearch").value);
+  const all=await idbAll("products");
+  const list=q?all.filter(p=>norm(p.code).includes(q)||(p.nameKey||"").includes(q)):all;
+  const sel=$("pick");
+  sel.innerHTML="";
+  if(list.length===0){
+    const opt=document.createElement("option");
+    opt.value="";
+    opt.textContent="Sin productos";
+    sel.appendChild(opt);
+    return;
+  }
+  for(const p of list.sort((a,b)=>(a.nameKey||"").localeCompare(b.nameKey||""))){
+    const opt=document.createElement("option");
+    opt.value=p.code;
+    opt.textContent=\`\${p.code} — \${p.name} — \${money(p.price)}\`;
+    sel.appendChild(opt);
+  }
+}
+
+// ---------- Queue (localStorage) ----------
+function loadQueue(){
+  try{
+    const q=JSON.parse(localStorage.getItem("mb_label_queue_v3")||"[]");
+    if(Array.isArray(q)) state.queue=q;
+  }catch{ state.queue=[]; }
+}
+function saveQueue(){ localStorage.setItem("mb_label_queue_v3",JSON.stringify(state.queue)); }
+function renderQueue(){
+  const tb=$("queueBody");
+  tb.innerHTML="";
+  if(state.queue.length===0){
+    tb.innerHTML='<tr><td colspan="5"><small style="color:rgba(255,255,255,.6);font-weight:900">Cola vacía.</small></td></tr>';
+    return;
+  }
+  state.queue.forEach((it,idx)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=\`
+      <td>\${it.code}</td>
+      <td>\${it.name}</td>
+      <td>\${money(it.price)}</td>
+      <td>\${it.qty}</td>
+      <td>
+        <button class="btn small secondary" data-act="edit" data-i="\${idx}" type="button">Cant.</button>
+        <button class="btn small danger" data-act="del" data-i="\${idx}" type="button">X</button>
+      </td>
+    \`;
+    tb.appendChild(tr);
+  });
+}
+async function addToQueue(){
+  const code=$("pick").value;
+  const qty=Math.max(1,Number($("qty").value||1));
+  if(!code) return alert("Seleccione un producto.");
+  const p=await idbGet("products",code);
+  if(!p) return alert("No encontrado.");
+  state.queue.push({code:p.code,name:p.name,price:p.price,qty,updatedAt:Date.now()});
+  saveQueue(); renderQueue(); toast("Agregado");
+}
+function clearQueue(){ state.queue=[]; saveQueue(); renderQueue(); toast("Cola limpia"); }
+
+// ---------- Barcode (PNG para PDF) ----------
+function barcodeDataURL(code){
+  const canvas=document.createElement("canvas");
+  canvas.width=900;
+  canvas.height=320;
+
+  JsBarcode(canvas, code, {
+    format:"CODE128",
+    displayValue:false,
+    margin:0,
+    height:230,
+    width:6,
+    background:"#ffffff",
+    lineColor:"#000000"
+  });
+
+  return canvas.toDataURL("image/png",1.0);
+}
+
+// ---------- PDF (50x25mm, horizontal, SOLO BARCODE+NOMBRE+PRECIO) ----------
+async function openPDF(){
+  if(state.queue.length===0) return alert("Cola vacía.");
+
+  let w = Number($("lblW")?.value || 50);
+  let h = Number($("lblH")?.value || 25);
+  if(!isFinite(w) || w < 20) w = 50;
+  if(!isFinite(h) || h < 20) h = 25;
+
+  let ori = $("lblOri")?.value || "landscape";
+  if(ori === "AUTO"){
+    ori = (w >= h) ? "landscape" : "portrait";
+  }
+
+  const pageW = w, pageH = h;
+
+  const labels=[];
+  for(const it of state.queue){
+    for(let i=0;i<it.qty;i++) labels.push(it);
+  }
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation: ori, unit:"mm", format:[pageW,pageH], compress:true});
+
+  const m = 1.6;
+  const quiet = 1.6;
+  const nameY = 6.2;
+  const barcodeTop = 7.6;
+
+  const barcodeH = pageH - barcodeTop - 1.2;
+  const barcodeW = pageW - (m*2) - (quiet*2);
+
+  function safeText(s){ return String(s||"").replace(/\\s+/g," ").trim(); }
+  function fitOneLine(doc, text, maxWidth, startSize=9.5, minSize=6.8){
+    let s=startSize;
+    doc.setFontSize(s);
+    while(s>minSize && doc.getTextWidth(text)>maxWidth){ s-=0.2; doc.setFontSize(s); }
+    if(doc.getTextWidth(text)<=maxWidth) return {size:s, text};
+    doc.setFontSize(minSize);
+    const ell="…";
+    let lo=0, hi=text.length;
+    while(lo<hi){
+      const mid=Math.ceil((lo+hi)/2);
+      const t=text.slice(0,mid)+ell;
+      if(doc.getTextWidth(t)<=maxWidth) lo=mid;
+      else hi=mid-1;
+    }
+    return {size:minSize, text:text.slice(0,lo)+ell};
+  }
+
+  for(let i=0;i<labels.length;i++){
+    if(i>0) doc.addPage([pageW,pageH], ori);
+
+    const it=labels[i];
+    const name=safeText(it.name);
+    const priceStr=money(it.price);
+
+    doc.setFillColor(255,255,255);
+    doc.rect(0,0,pageW,pageH,"F");
+
+    doc.setTextColor(0,0,0);
+    doc.setFont("helvetica","bold");
+
+    const rightX = pageW - m;
+    doc.setFontSize(9.2);
+    const priceWtxt = doc.getTextWidth(priceStr);
+    const gap = 2.2;
+    const maxNameW = (rightX - priceWtxt - gap) - m;
+
+    const fitted = fitOneLine(doc, name, Math.max(10, maxNameW), 9.2, 6.8);
+    doc.setFontSize(fitted.size);
+    doc.text(fitted.text || "—", m, nameY);
+
+    doc.setFontSize(9.2);
+    doc.text(priceStr, rightX, nameY, {align:"right"});
+
+    const bx = m;
+    const by = barcodeTop;
+    const bw = pageW - (m*2);
+    const bh = barcodeH;
+
+    doc.setDrawColor(0,0,0);
+    doc.setLineWidth(0.25);
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(bx, by, bw, bh, 1.6, 1.6, "FD");
+
+    const img=barcodeDataURL(it.code);
+    doc.addImage(img, "PNG", bx + quiet, by + quiet, bw - (quiet*2), bh - (quiet*2));
+  }
+
+  const blobUrl=doc.output("bloburl");
+  // Avisar al sistema principal para (opcional) actualizar inventario con la cantidad de etiquetas generadas
+  try{ window.parent && window.parent.postMessage({type:"LABELS_PDF_DONE", queue: state.queue}, "*"); }catch(e){}
+  window.open(blobUrl,"_blank");
+  toast("PDF listo");
+}
+
+// ---------- Backup ----------
+async function exportJSON(){
+  const products=await idbAll("products");
+  const meta=await idbAll("meta");
+
+  // STOCK (nuevo): en la exportación garantizamos stock numérico (0 si no existe),
+  // sin afectar nada del funcionamiento actual.
+  const productsOut = (products||[]).map(p => ({
+    ...p,
+    stock: Math.max(0, Math.floor(Number(p?.stock ?? 0)))
+  }));
+
+  const data={exportedAt:new Date().toISOString(),products:productsOut,meta,queue:state.queue};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="marckbusiness_generador_backup.json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+async function importExcelFile(file){
+  const data=new Uint8Array(await file.arrayBuffer());
+  const wb=XLSX.read(data,{type:"array"});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+  let ok=0, bad=0;
+
+  for(const r of rows){
+    const sku=String(r.SKU ?? r.sku ?? r.CODIGO ?? r.codigo ?? r.Código ?? r.codigo_barras ?? r.CODBARRAS ?? "").trim();
+    const name=String(r.NOMBRE ?? r.nombre ?? r.PRODUCTO ?? r.producto ?? "").trim();
+    const priceRaw=r.PRECIO ?? r.precio ?? r.PRICE ?? r.price ?? "";
+    const price=Number(String(priceRaw).replace(/[^0-9.]/g,""));
+
+    // STOCK (nuevo): columna opcional
+    const stockRaw = r.STOCK ?? r.stock ?? r.EXISTENCIA ?? r.existencia ?? "";
+    const stock = Math.max(0, Math.floor(Number(String(stockRaw).replace(/[^0-9]/g,"")) || 0));
+
+    if(!validateCode5(sku)||!name||isNaN(price)){bad++;continue;}
+
+    await idbPut("products",{code:sku,name,price:Number(price.toFixed(2)),stock, nameKey:norm(name),updatedAt:Date.now()});
+    ok++;
+  }
+  await refreshPicker();
+  renderPreview();
+  toast("Excel importado");
+  if(bad>0) alert("Importados: "+ok+" | Saltados: "+bad+" (revisa columnas SKU/NOMBRE/PRECIO).");
+}
+
+// ---------- Events ----------
+function wire(){
+  // LOGIN
+  $("btnLogin").addEventListener("click", doLogin);
+  $("btnLoginClear").addEventListener("click", ()=>{ $("loginCode").value=""; $("loginCode").focus(); });
+  $("loginCode").addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); doLogin(); } });
+  $("btnLogout").addEventListener("click", doLogout);
+
+  // Preview inputs
+  ["pCode","pName","pPrice"].forEach(id=>$(id).addEventListener("input",renderPreview));
+
+  // Products
+  $("btnSave").addEventListener("click",saveProduct);
+  $("btnClearForm").addEventListener("click",async()=>{
+    $("pCode").value=await nextCode();
+    $("pName").value="";
+    $("pPrice").value="";
+    // STOCK (nuevo)
+    if($("pStock")) $("pStock").value="0";
+    renderPreview();
+  });
+  $("btnNext").addEventListener("click",async()=>{
+    $("pCode").value=await nextCode();
+    $("pCode").focus();
+    $("pCode").select();
+    renderPreview();
+  });
+
+  // Picker/search
+  $("qSearch").addEventListener("input",refreshPicker);
+  $("btnRefresh").addEventListener("click",refreshPicker);
+
+  // Queue
+  $("btnAddToQueue").addEventListener("click",addToQueue);
+  $("btnClearQueue").addEventListener("click",clearQueue);
+  $("btnPDF").addEventListener("click",openPDF);
+
+  $("queueBody").addEventListener("click",(e)=>{
+    const b=e.target.closest("button[data-act]");
+    if(!b) return;
+    const i=Number(b.dataset.i);
+    if(b.dataset.act==="del"){
+      state.queue.splice(i,1);
+      saveQueue();
+      renderQueue();
+    }
+    if(b.dataset.act==="edit"){
+      const v=prompt("Nueva cantidad:",state.queue[i].qty);
+      if(v===null) return;
+      state.queue[i].qty=Math.max(1,Number(v||1));
+      saveQueue();
+      renderQueue();
+    }
+  });
+
+  // Import/export
+  $("btnExcel").addEventListener("click",()=>$("excelFile").click());
+  $("excelFile").addEventListener("change",async(e)=>{
+    const file=e.target.files?.[0];
+    if(!file) return;
+    try{ await importExcelFile(file); }
+    catch(err){ alert("Error importando Excel."); }
+    e.target.value="";
+  });
+  $("btnExport").addEventListener("click",exportJSON);
+
+  // Wipe
+  $("btnWipe").addEventListener("click",async()=>{
+    if(confirm("¿Borrar todo?")){
+      await idbClear();
+      state.queue=[];
+      saveQueue();
+      await refreshPicker();
+      renderQueue();
+      $("pCode").value=await nextCode();
+      $("pName").value="";
+      $("pPrice").value="";
+      // STOCK (nuevo)
+      if($("pStock")) $("pStock").value="0";
+      renderPreview();
+    }
+  });
+
+  // Ctrl+Enter para guardar
+  window.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"&&e.ctrlKey){
+      e.preventDefault();
+      saveProduct();
+    }
+  });
+}
+
+// ---------- Init ----------
+(async function init(){
+  if(isLoggedIn()) showApp();
+  else showLogin();
+
+  db=await openDB();
+
+  loadQueue();
+  renderQueue();
+
+  const meta=await idbGet("meta","next");
+  $("pCode").value=meta?.value?pad5(meta.value):pad5(1);
+
+  // STOCK (nuevo): asegura valor inicial visible sin afectar nada
+  if($("pStock") && ($("pStock").value==="" || $("pStock").value==null)) $("pStock").value="0";
+
+  await refreshPicker();
+  renderPreview();
+  wire();
+})();
+<\/script>
+
+<script>
+/* ====== Integración MTR ONLINE AP (bridge) ======
+   Objetivo: usar el inventario del sistema principal SIN depender de IndexedDB dentro del iframe (origen opaco).
+   - Recibe lista desde el padre
+   - Normaliza campos
+   - Mantiene "misma app" del generador: refreshPicker/addToQueue/etc siguen llamando idbAll/idbGet,
+     pero aquí los "puenteamos" para que lean de un cache en memoria cuando el store sea "products".
+*/
+(function(){
+  // Avisar al padre que el generador ya cargó
+  try{ window.parent && window.parent.postMessage({type:"LABELS_READY"}, "*"); }catch(e){}
+
+  // Cache en memoria de productos recibidos del sistema principal
+  window.__MTR_PRODUCTS_CACHE__ = window.__MTR_PRODUCTS_CACHE__ || [];
+
+  // Monkeypatch seguro (solo products)
+  const __orig_idbAll = window.idbAll;
+  const __orig_idbGet = window.idbGet;
+
+  window.idbAll = async function(store){
+    try{
+      if(store==="products" && Array.isArray(window.__MTR_PRODUCTS_CACHE__) && window.__MTR_PRODUCTS_CACHE__.length){
+        // Regresa con nameKey para que el buscador funcione
+        return window.__MTR_PRODUCTS_CACHE__.map(p=>({
+          code: p.code,
+          name: p.name,
+          price: p.price,
+          stock: p.stock,
+          nameKey: (typeof norm==="function"?norm(p.name):(p.name||"").toLowerCase())
+        }));
+      }
+      if(typeof __orig_idbAll === "function") return await __orig_idbAll(store);
+      return [];
+    }catch(e){
+      if(store==="products") return (window.__MTR_PRODUCTS_CACHE__||[]).map(p=>({
+        code:p.code,name:p.name,price:p.price,stock:p.stock,
+        nameKey:(typeof norm==="function"?norm(p.name):(p.name||"").toLowerCase())
+      }));
+      return [];
+    }
+  };
+
+  window.idbGet = async function(store, key){
+    try{
+      if(store==="products" && Array.isArray(window.__MTR_PRODUCTS_CACHE__) && window.__MTR_PRODUCTS_CACHE__.length){
+        const k = String(key??"");
+        const found = window.__MTR_PRODUCTS_CACHE__.find(p=>String(p.code)===k);
+        if(found) return {
+          code: found.code,
+          name: found.name,
+          price: found.price,
+          stock: found.stock,
+          nameKey: (typeof norm==="function"?norm(found.name):(found.name||"").toLowerCase())
+        };
+        return null;
+      }
+      if(typeof __orig_idbGet === "function") return await __orig_idbGet(store, key);
+      return null;
+    }catch(e){
+      if(store==="products"){
+        const k = String(key??"");
+        const found = (window.__MTR_PRODUCTS_CACHE__||[]).find(p=>String(p.code)===k);
+        return found ? {code:found.code,name:found.name,price:found.price,stock:found.stock,nameKey:(typeof norm==="function"?norm(found.name):(found.name||"").toLowerCase())} : null;
+      }
+      return null;
+    }
+  };
+
+  // Recibir productos del sistema principal
+  window.addEventListener("message", async (ev)=>{
+    try{
+      const d = ev.data || {};
+      if(d.type !== "MTR_PRODUCTS") return;
+
+      const list = Array.isArray(d.products) ? d.products : [];
+      const normalized = [];
+      for(const p of list){
+        const code = String(p.code ?? p.sku ?? p.id ?? "").trim();
+        const name = String(p.name ?? p.product ?? p.descripcion ?? "").trim();
+        const price = Number(p.price ?? p.precio ?? p.salePrice ?? 0);
+        const stock = Math.max(0, Math.floor(Number(p.stock ?? p.exist ?? p.existencia ?? 0)));
+        if(!code || !name) continue;
+        normalized.push({
+          code,
+          name,
+          price: Number((isFinite(price)?price:0).toFixed(2)),
+          stock
+        });
+      }
+
+      window.__MTR_PRODUCTS_CACHE__ = normalized;
+
+      // Refrescar UI del generador
+      if(typeof refreshPicker === "function") await refreshPicker();
+      if(typeof renderPreview === "function") renderPreview();
+      if(typeof renderQueue === "function") renderQueue();
+
+      const el = document.getElementById("statusSync");
+      if(el) el.textContent = "✅ Inventario sincronizado (" + normalized.length + ")";
+    }catch(err){
+      console.error("Bridge error:", err);
+    }
+  });
+})();
+<\/script>
+
+</body>
+</html>`;
+let __labelsLoadedMB = false;
+
+/* === LOGO1 -> DataURL para que el iframe (srcdoc) no intente cargar file:///LOGO1.png === */
+async function __mbLoadLogoDataURL__(){
+  return await new Promise((resolve)=>{
+    try{
+      const img = new Image();
+      img.onload = ()=>{
+        try{
+          const c = document.createElement("canvas");
+          c.width = img.naturalWidth || img.width || 1;
+          c.height = img.naturalHeight || img.height || 1;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(c.toDataURL("image/png"));
+        }catch(e){ resolve(null); }
+      };
+      img.onerror = ()=> resolve(null);
+      // relativo al HTML principal
+      img.src = "LOGO1.png";
+    }catch(e){ resolve(null); }
+  });
+}
+
+async function __mbBuildLabelsSrcdoc__(){
+  let sd = __GEN_LABELS_SRCDOC__;
+  const logo = await __mbLoadLogoDataURL__();
+  if(logo){
+    // Reemplaza solo src de LOGO1.png dentro del srcdoc
+    sd = sd
+      .replaceAll('src="./LOGO1.png"', `src="${logo}"`)
+      .replaceAll("src='./LOGO1.png'", `src="${logo}"`)
+      .replaceAll('src="LOGO1.png"', `src="${logo}"`)
+      .replaceAll("src='LOGO1.png'", `src="${logo}"`);
+  }
+  return sd;
+}
+
+async function openLabelsModal(){
+  const ov = document.getElementById("labelsOverlayMB");
+  const fr = document.getElementById("labelsFrameMB");
+  if(!ov || !fr) return;
+
+  ov.classList.add("show");
+  ov.setAttribute("aria-hidden","false");
+
+  if(!__labelsLoadedMB){
+    fr.srcdoc = await __mbBuildLabelsSrcdoc__();
+    __labelsLoadedMB = true;
+  }
+  
+  // Hook: asegurar que el botón azul "➕ Crear producto" del iframe abra el modal del sistema
+  const hookCreateBtn = ()=>{
+    try{
+      const doc = fr.contentDocument;
+      const btn = doc && doc.getElementById("mbBtnCreateProd");
+      if(btn){
+        btn.onclick = (e)=>{
+          try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+          openGenProdModalMB(null);
+          return false;
+        };
+      }
+    }catch(e){ /* ignore cross-doc errors */ }
+  };
+  // En algunos navegadores, srcdoc tarda en montar el DOM
+  fr.addEventListener("load", hookCreateBtn, { once:false });
+  setTimeout(hookCreateBtn, 100);
+  setTimeout(hookCreateBtn, 400);
+  setTimeout(hookCreateBtn, 900);
+
+// Enviar inventario (con retries) por si el iframe tarda
+  sendInventoryToLabels();
+  setTimeout(sendInventoryToLabels, 250);
+  setTimeout(sendInventoryToLabels, 800);
+}
+
+function closeLabelsModal(){
+  const ov = document.getElementById("labelsOverlayMB");
+  if(!ov) return;
+  ov.classList.remove("show");
+  ov.setAttribute("aria-hidden","true");
+
+}
+
+function openInvLabelsModal(){
+  const ov = document.getElementById("invLabelsOverlayMB");
+  if(!ov) return;
+  ov.classList.add("show");
+  ov.setAttribute("aria-hidden","false");
+}
+function closeInvLabelsModal(){
+  const ov = document.getElementById("invLabelsOverlayMB");
+  if(!ov) return;
+  ov.classList.remove("show");
+  ov.setAttribute("aria-hidden","true");
+}
+async function applyInvFromLabels(){
+  try{
+    const list = Array.isArray(__pendingLabelsQueueMB) ? __pendingLabelsQueueMB : [];
+    if(!list.length){
+      closeInvLabelsModal();
+      return;
+    }
+    // Consolidar por code
+    const byCode = new Map();
+    for(const it of list){
+      const code = String(it.code ?? "").trim();
+      const qty = Math.max(0, Math.floor(Number(it.qty ?? 0)));
+      if(!code || !qty) continue;
+      byCode.set(code, (byCode.get(code) || 0) + qty);
+    }
+    for(const [code, qty] of byCode.entries()){
+      const p = await idbGet("products", code);
+      if(!p) continue;
+      const cur = Math.max(0, Math.floor(Number(p.stock ?? 0)));
+      p.stock = cur + qty;
+      await idbPut("products", p);
+    }
+    __pendingLabelsQueueMB = null;
+    closeInvLabelsModal();
+    // Refrescar vistas de inventario/productos si están visibles
+    try{ if(typeof renderProducts==="function") renderProducts(); }catch(e){}
+    try{ if(typeof renderInventory==="function") renderInventory(); }catch(e){}
+    alert("✅ Inventario actualizado con las etiquetas generadas.");
+  }catch(err){
+    console.error(err);
+    alert("❌ No se pudo actualizar el inventario. Revisa consola.");
+  }
+}
+
+async function sendInventoryToLabels(){
+  const fr = document.getElementById("labelsFrameMB");
+  if(!fr || !fr.contentWindow) return;
+  try{
+    const products = await idbAll("products");
+    const payload = (products || []).map(p=>({
+      code: p.code ?? p.sku ?? p.id ?? "",
+      name: p.name ?? p.product ?? p.descripcion ?? "",
+      price: Number(p.price ?? p.precio ?? p.salePrice ?? 0),
+      stock: Number(p.stock ?? p.exist ?? p.existencia ?? 0)
+    }));
+    fr.contentWindow.postMessage({type:"MTR_PRODUCTS", products: payload}, "*");
+  }catch(err){
+    console.error("No se pudo leer/enviar inventario:", err);
+  }
+}
+
+// Handshake desde el iframe
+window.addEventListener("message", (ev)=>{
+  const d = ev.data || {};
+  if(d.type === "LABELS_READY") sendInventoryToLabels();
+});
+
+// Recibir aviso de que se generó un PDF de etiquetas (desde el iframe)
+let __pendingLabelsQueueMB = null;
+
+window.addEventListener("message", (ev)=>{
+  const d = ev.data || {};
+  if(d.type !== "LABELS_PDF_DONE") return;
+  // Guardar cola para aplicar al inventario si el usuario acepta
+  __pendingLabelsQueueMB = Array.isArray(d.queue) ? d.queue : [];
+  // Construir resumen
+  const map = new Map();
+  let total = 0;
+  for(const it of __pendingLabelsQueueMB){
+    const code = String(it.code ?? "").trim();
+    const name = String(it.name ?? "").trim();
+    const qty = Math.max(0, Math.floor(Number(it.qty ?? 0)));
+    if(!code || !qty) continue;
+    total += qty;
+    const prev = map.get(code) || {code, name, qty:0};
+    prev.qty += qty;
+    if(!prev.name && name) prev.name = name;
+    map.set(code, prev);
+  }
+  const lines = [];
+  lines.push("Total de etiquetas: " + total);
+  lines.push("");
+  for(const row of map.values()){
+    lines.push("• " + (row.name || row.code) + "  (" + row.code + "):  +" + row.qty);
+  }
+  const el = document.getElementById("invLabelsSummaryMB");
+  if(el) el.textContent = lines.join("\n");
+  openInvLabelsModal();
+});
+
+// Cerrar con ESC
+document.addEventListener("keydown", (e)=>{
+  if(e.key==="Escape"){
+    const ov=document.getElementById("labelsOverlayMB");
+    if(ov && ov.classList.contains("show")) closeLabelsModal();
+  }
+});
+
+
+/* ===== Crear producto (modal) desde Generador ===== */
+function openGenProdModalMB(prefill){
+  const ov = document.getElementById("genProdOverlayMB");
+  if(!ov) return;
+  // Prefill optional
+  if(prefill && typeof prefill === "object"){
+    if(document.getElementById("mbNewPCode")) document.getElementById("mbNewPCode").value = (prefill.code||"");
+    if(document.getElementById("mbNewPName")) document.getElementById("mbNewPName").value = (prefill.name||"");
+    if(document.getElementById("mbNewPPrice")) document.getElementById("mbNewPPrice").value = (prefill.price!=null?String(prefill.price):"");
+    if(document.getElementById("mbNewPCost")) document.getElementById("mbNewPCost").value = (prefill.cost!=null?String(prefill.cost):"");
+    if(document.getElementById("mbNewPStock")) document.getElementById("mbNewPStock").value = (prefill.stock!=null?String(prefill.stock):"0");
+  }else{
+    ["mbNewPCode","mbNewPName","mbNewPPrice","mbNewPCost","mbNewPStock"].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value="";
+    });
+    const st=document.getElementById("mbNewPStock"); if(st) st.value="0";
+  }
+  ov.style.display="flex";
+  ov.setAttribute("aria-hidden","false");
+  // focus first input
+  setTimeout(()=>{ const el=document.getElementById("mbNewPCode"); if(el) el.focus(); }, 30);
+}
+function closeGenProdModalMB(){
+  const ov = document.getElementById("genProdOverlayMB");
+  if(!ov) return;
+  ov.style.display="none";
+  ov.setAttribute("aria-hidden","true");
+}
+async function saveGenProductMB(){
+  const code = (document.getElementById("mbNewPCode")?.value || "").trim();
+  const name = (document.getElementById("mbNewPName")?.value || "").trim();
+  const price = Number((document.getElementById("mbNewPPrice")?.value || "").replace(",",".")) || 0;
+  const cost  = Number((document.getElementById("mbNewPCost")?.value || "").replace(",",".")) || 0;
+  const stock = Number((document.getElementById("mbNewPStock")?.value || "0").replace(",",".")) || 0;
+
+  if(!code) return alert("Ingresa un código / SKU.");
+  if(!name) return alert("Ingresa el nombre del producto.");
+  if(price<=0) return alert("Ingresa un precio válido.");
+  // cost puede ser 0 si quieres, no lo bloqueo.
+  const prod = { code, name, price, cost, stock };
+  try{
+    await idbPut("products", prod);
+    closeGenProdModalMB();
+    // refrescar inventario del generador si está abierto
+    if(typeof sendInventoryToLabels === "function"){ 
+      try{ await sendInventoryToLabels(); }catch(_e){}
+    }
+    toast("Producto guardado.");
+  }catch(err){
+    console.error(err);
+    alert("No se pudo guardar el producto.");
+  }
+}
+
+// Mensajes desde el iframe del generador
+window.addEventListener("message", (ev)=>{
+  const d = ev.data || {};
+  if(d && (d.type === "MB_OPEN_CREATE_PRODUCT_MODAL" || d.type === "MTR_OPEN_CREATE_COST")){
+    openGenProdModalMB(d.prefill || null);
+  }
+});
+
 </script>
+
+<audio id="saleTone" src="tono1.mp3" preload="auto"></audio>
+
+
+
+<!-- ===== LOADING (COBRAR) ===== -->
+<div id="checkoutLoading" class="ok-modal" aria-hidden="true">
+  <div class="loading-card" role="dialog" aria-modal="true" aria-label="Procesando">
+    <div class="loading-body">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <div class="loading-text">
+        <b>Procesando cobro…</b>
+        <small id="checkoutLoadingMsg">Espera un momento.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL MENSAJE (OK) ===== -->
+<div id="okModalOverlay" class="ok-modal">
+  <div class="ok-card" role="dialog" aria-modal="true" aria-label="Mensaje">
+    <div class="ok-head">
+      <img src="LOGO1.png" alt="logo" class="ok-logo">
+      <div>
+        <div id="okModalTitle" class="ok-title">Mensaje</div>
+        <div class="ok-msg" id="okModalMsg" style="margin-top:2px"></div>
+      </div>
+    </div>
+    <div class="ok-body">
+      <div class="ok-actions">
+        <button id="okModalBtn" class="btn primary" type="button" onclick="closeOkModal()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL CÓDIGO (EDICIÓN) ===== -->
+<div id="editCodeOverlay" class="mb-modal">
+  <div class="mb-modal-card" role="dialog" aria-modal="true" aria-label="Código de acceso">
+    <div class="mb-modal-head">
+      <img src="LOGO1.png" alt="logo" class="mb-modal-logo">
+      <div>
+        <div id="editCodeTitle" class="mb-modal-title">Acceso requerido</div>
+        <div id="editCodeMsg" class="mb-modal-sub">Ingrese el código</div>
+      </div>
+      <button class="mb-modal-x" type="button" onclick="closeEditCodeModal()">✕</button>
+    </div>
+
+    <div class="mb-modal-body">
+      <label style="font-size:12px;opacity:.75">Código</label>
+      <input id="editCodeInput" class="mb-modal-input" type="password" inputmode="numeric" placeholder="••••••" onkeydown="if(event.key==='Enter'){confirmEditCode();}">
+      <div id="editCodeErr" class="mb-modal-err"></div>
+
+      <div class="mb-modal-actions">
+        <button class="btn" type="button" onclick="confirmEditCode()">Confirmar</button>
+        <button class="btn ghost" type="button" onclick="closeEditCodeModal()">Cancelar</button>
+</div>
+
+      <div class="muted" style="margin-top:8px">Se solicita una sola vez por sesión (esta pestaña).</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== Modal Generador de Etiquetas (integrado) ===== -->
+<div class="ok-modal" id="labelsOverlayMB" aria-hidden="true">
+  <div class="ok-card" style="width:min(980px,100%);height:min(92vh,820px);">
+    <div class="ok-head">
+      <img class="ok-logo" src="LOGO1.png" alt="Logo">
+      <div>
+        <div class="ok-title">🏷️ Generador de Etiquetas</div>
+        <div class="ok-msg" style="opacity:.85">Usa tu inventario actual del sistema (sin abrir otra pestaña).</div>
+      </div>
+      <button class="mb-modal-x" type="button" onclick="closeLabelsModal()" aria-label="Cerrar">✕</button>
+    </div>
+    
+    <div class="ok-body" style="padding:0;height:calc(100% - 70px);display:flex;gap:0;">
+      <iframe id="labelsFrameMB"
+              title="Generador de Etiquetas"
+              style="flex:1;height:100%;border:0;border-radius:0 0 0 18px;background:#0b0b0f"></iframe>
+      <div style="display:none;width:min(320px,40vw);border-left:1px solid rgba(255,255,255,.08);background:rgba(10,10,18,.92);padding:14px;border-radius:0 0 18px 0;overflow:auto">
+        <div style="font-weight:800;margin-bottom:10px">➕ Crear producto</div>
+        <div class="form stack">
+          <div class="field">
+            <label>Código (SKU)</label>
+            <input id="genPCode" placeholder="Ej: 7501234567890"/>
+          </div>
+          <div class="field">
+            <label>Nombre</label>
+            <input id="genPName" placeholder="Ej: Blusa rosa"/>
+          </div>
+          <div class="field">
+            <label>Precio (Q)</label>
+            <input id="genPPrice" type="number" min="0" step="0.01" placeholder="Ej: 125"/>
+          </div>
+          <div class="field">
+            <label>Costo (Q)</label>
+            <input id="genPCost" type="number" min="0" step="0.01" placeholder="Ej: 80"/>
+          </div>
+          <div class="field">
+            <label>Stock</label>
+            <input id="genPStock" type="number" min="0" step="1" placeholder="Ej: 10"/>
+          </div>
+          <button class="btn primary" id="btnGenCreateProd" type="button">Guardar en inventario</button>
+          <div class="muted" style="margin-top:8px">Crea productos aquí y se cargan al inventario (con costo).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- ===== Modal: Actualizar inventario por etiquetas ===== -->
+<div class="ok-modal" id="invLabelsOverlayMB" aria-hidden="true">
+  <div class="ok-card" role="dialog" aria-modal="true" aria-label="Actualizar inventario" style="width:min(640px,100%);">
+    <div class="ok-head">
+      <img class="ok-logo" src="LOGO1.png" alt="Logo">
+      <div>
+        <div class="ok-title">📦 Actualizar inventario</div>
+        <div class="ok-msg" style="opacity:.85">Generaste etiquetas. ¿Quieres cargar esas unidades al inventario?</div>
+      </div>
+      <button class="mb-modal-x" type="button" onclick="closeInvLabelsModal()" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="ok-body">
+      <div id="invLabelsSummaryMB" class="muted" style="white-space:pre-wrap"></div>
+      <div class="muted" style="margin-top:10px">Esto <b>sumará</b> la cantidad de etiquetas al <b>stock</b> de cada producto.</div>
+      <div class="mb-modal-actions" style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn ghost" type="button" onclick="closeInvLabelsModal()">No</button>
+        <button class="btn" type="button" onclick="applyInvFromLabels()">Sí, cargar al inventario</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
