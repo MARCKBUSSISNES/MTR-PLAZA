@@ -1,9 +1,10 @@
+var indic = "";
 <!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>/👚MTR ONLINE👚/ </title>
+  <title>MTR ONLINE AP</title>
 
   <style>
     :root{
@@ -599,7 +600,7 @@
 </head>
 <body>
 <div class="simpleNotice">
-  ✅  PAGO AL DIA / Modificacion 12-feb-26
+  ✅  PAGO AL DIA / V.56 / 07-FEB-26
 </div>
 
   <div class="sparkle"></div>
@@ -683,7 +684,7 @@
               </div>
               <div class="field">
                 <label>Buscar producto (por nombre)</label>
-                <input id="productSearch" placeholder="Ingrese el producto..." />
+                <input id="productSearch" placeholder="Ej: blusa, jeans..." />
               </div>
 
               <div class="field full">
@@ -701,6 +702,7 @@
                   <th style="width:70px">Cant</th>
                   <th>Producto</th>
                   <th style="width:110px">Precio</th>
+                  <th style="width:120px">Desc</th>
                   <th style="width:110px">Total</th>
                   <th style="width:110px">Acción</th>
                 </tr>
@@ -798,26 +800,26 @@
 
               <div class="field">
                 <label>Nombres</label>
-                <input id="cNames" placeholder="Ej: Maria"/>
+                <input id="cNames" placeholder="Ej: Karina"/>
               </div>
               <div class="field">
                 <label>Apellidos</label>
-                <input id="cLast" placeholder="Ej: Ruiz"/>
+                <input id="cLast" placeholder="Ej: López"/>
               </div>
 
               <div class="field">
                 <label>NIT</label>
-                <input id="cNit" placeholder="Ej: CF / No use Guiones."/>
+                <input id="cNit" placeholder="Ej: CF / 1234567-8"/>
               </div>
 
               <div class="field full">
                 <label>Dirección</label>
-                <textarea id="cAddr" rows="3" placeholder="Direccion..."></textarea>
+                <textarea id="cAddr" rows="3" placeholder="Ej: Col. X, casa #, zona..., referencias..."></textarea>
               </div>
 
               <div class="field full">
                   <label>Indicaciones (referencias / comentario)</label>
-                  <textarea id="cIndic" rows="3" placeholder="Indicaciones / Comentarios..."></textarea>
+                  <textarea id="cIndic" rows="3" placeholder="Ej: Portón negro, llamar al llegar, casa con rejas..."></textarea>
               </div>
 
               <div class="field full">
@@ -1042,15 +1044,15 @@
               </div>
               <div class="field">
                 <label>Nombre</label>
-                <input id="pName" placeholder="Nombre del producto."/>
+                <input id="pName" placeholder="Ej: Blusa rosa"/>
               </div>
               <div class="field">
                 <label>Precio (Q)</label>
-                <input id="pPrice" type="number" min="0" step="0.01" placeholder="Precio...Q"/>
+                <input id="pPrice" type="number" min="0" step="0.01" placeholder="Ej: 125"/>
               </div>
               <div class="field">
                 <label>Costo (Q)</label>
-                <input id="pCost" type="number" min="0" step="0.01" placeholder="Q"/>
+                <input id="pCost" type="number" min="0" step="0.01" placeholder="Ej: 80"/>
               </div>
               <div class="field">
                 <label>Stock</label>
@@ -1383,7 +1385,17 @@
   </div>
 
   <!-- html2canvas (mejora PNG) -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
+document.addEventListener("change", function(e){
+  const el = e.target;
+  if(!el || el.dataset.act!=="discVal") return;
+  const id = el.dataset.id;
+  const it = (state.cart||[]).find(x=>String(x.id)===String(id));
+  if(!it) return;
+  it.discValue = Math.max(0, Number(el.value||0));
+  renderCart();
+});
+</script>
 
 <script>
 
@@ -1577,23 +1589,35 @@ function syncDiscUI(){
 }
 
 const money = (n)=> "Q" + (Number(n||0)).toFixed(2);
+
+// ===== DESCUENTO POR PRODUCTO (FUNCIONAL) =====
+function makeLineId(){
+  return "L" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+function lineGross(it){
+  return Number(it?.price||0) * Number(it?.qty||0);
+}
+
+function lineItemDiscount(it){
+  const gross = lineGross(it);
+  const v = Math.max(0, Number(it?.discValue||0));
+  return Math.min(gross, v);
+}
+
+function lineNet(it){
+  return Math.max(0, lineGross(it) - lineItemDiscount(it));
+}
+
 // ---------- Cart math + UI ----------
 function calcSubtotal(){
-  return (state.cart||[]).reduce((sum,it)=> sum + (Number(it.price||0) * Number(it.qty||0)), 0);
+  return (state.cart||[]).reduce((sum,it)=> sum + lineGross(it),0);
 }
+
 function calcDiscount(){
-  const sub = calcSubtotal();
-  const d = state.discount || { type:"NONE", value:0 };
-  if(d.type === "Q"){
-    const v = Math.max(0, Number(d.value||0));
-    return Math.min(sub, v);
-  }
-  if(d.type === "PCT"){
-    const p = Math.max(0, Number(d.value||0));
-    return sub * (p/100);
-  }
-  return 0;
+  return (state.cart||[]).reduce((sum,it)=> sum + lineItemDiscount(it),0);
 }
+
 function calcGrand(){
   return Math.max(0, calcSubtotal() - calcDiscount());
 }
@@ -1608,31 +1632,49 @@ function renderCart(){
   const tbody = $("cartBody");
   if(!tbody) return;
 
+  // Compat: asegura id y descuento por línea
+  (state.cart||[]).forEach(it=>{
+    if(!it.id) it.id = makeLineId();
+    if(it.discValue==null) it.discValue = 0;
+  });
+
   const cart = state.cart || [];
   if(!cart.length){
-    tbody.innerHTML = `<tr><td colspan="5" class="muted">Carrito vacío</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">Carrito vacío</td></tr>`;
   }else{
     tbody.innerHTML = cart.map(it=>{
+      const id = String(it.id);
       const qty = Number(it.qty||0);
       const price = Number(it.price||0);
-      const line = qty * price;
-      const code = String(it.code||"");
-      const name = String(it.name||"");
+      const disc = lineItemDiscount(it);
+      const net  = lineNet(it);
+
       return `
         <tr>
           <td class="qty">
-            <button class="mini" data-act="minus" data-code="${code}">−</button>
+            <button class="mini" data-act="minus" data-id="${id}">−</button>
             <span class="q">${qty}</span>
-            <button class="mini" data-act="plus" data-code="${code}">+</button>
+            <button class="mini" data-act="plus" data-id="${id}">+</button>
           </td>
           <td class="name">
-            <div class="t">${name}</div>
-            <div class="s muted">${code}</div>
+            <div class="t">${escapeHtml(String(it.name||""))}</div>
+            <div class="s muted">${escapeHtml(String(it.code||""))}</div>
           </td>
           <td class="price">${money(price)}</td>
-          <td class="line">${money(line)}</td>
+          <td class="disc">
+            <input type="number" class="mini"
+                   min="0" step="0.01"
+                   value="${Number(it.discValue||0) ? Number(it.discValue||0) : ""}"
+                   placeholder="0.00"
+                   data-act="discVal" data-id="${id}"
+                   style="width:92px; text-align:right;" />
+            <div class="muted" style="font-size:11px; text-align:right; margin-top:4px;">
+              -${money(disc)}
+            </div>
+          </td>
+          <td class="line">${money(net)}</td>
           <td class="act">
-            <button class="mini danger" data-act="del" data-code="${code}">✕</button>
+            <button class="mini danger" data-act="del" data-id="${id}">✕</button>
           </td>
         </tr>`;
     }).join("");
@@ -1643,7 +1685,6 @@ function renderCart(){
   const discEl = $("discTotal"); if(discEl) discEl.textContent = money(calcDiscount());
   const grandEl = $("grandTotal"); if(grandEl) grandEl.textContent = money(calcGrand());
 
-  // Refresca recibo / previsualización
   if(typeof updateReceiptPreview === "function") updateReceiptPreview();
 }
 
@@ -2004,17 +2045,24 @@ function setView(v){
 function cartAdd(product, qty=1){
   qty = Number(qty||1);
   if(qty<1) qty=1;
-  const found = state.cart.find(x=>x.code===product.code);
-  if(found) found.qty += qty;
-  else state.cart.push({code:product.code, name:product.name, price:Number(product.price), qty});
+
+  state.cart.push({
+    id: makeLineId(),
+    code: product.code,
+    name: product.name,
+    price: Number(product.price||0),
+    qty: qty,
+    discValue: 0
+  });
+
   renderCart();
 }
 
-function cartInc(code, delta){
-  const it = state.cart.find(x=>x.code===code);
+function cartInc(lineId, delta){
+  const it = state.cart.find(x=>String(x.id)===String(lineId));
   if(!it) return;
   it.qty += delta;
-  if(it.qty<=0) state.cart = state.cart.filter(x=>x.code!==code);
+  if(it.qty<=0) state.cart = state.cart.filter(x=>String(x.id)!==String(lineId));
   renderCart();
 }
 
@@ -2522,6 +2570,38 @@ async function checkout(){
 
     await idbPut("shipments", shipment);
     state.lastReceipt = shipment;
+
+    // ✅ ENVÍO: dispara acciones automáticas dentro del click (evita bloqueos del navegador)
+    try{
+      // Pre-abrir WhatsApp en blanco (mantiene gesto del usuario)
+      const __ph = getClientPhoneFromReceipt(shipment);
+      if(__ph){
+        _waWin = _waWin || window.open("about:blank","_blank");
+      }
+      // Lanzar descarga sin await para no perder gesto del usuario
+      if(state.settings.autoPNG){
+        try{
+          // 🔥 asegurar que el ticket esté actualizado antes de capturar PNG
+          if(typeof updateReceiptPreview === "function"){
+            try{ updateReceiptPreview(); }catch(e){}
+          }
+          // pequeño delay para que el DOM pinte (evita PNG vacío / bloqueado)
+          setTimeout(()=>{
+            try{ downloadReceiptPNG(); }catch(e){}
+          }, 80);
+        }catch(e){}
+      }else if(state.settings.autoPDF){
+        try{ generatePDF(); }catch(e){}
+      }
+      // Enviar a WhatsApp (si hay teléfono)
+      if(__ph){
+        const __url = "https://wa.me/" + __ph + "?text=" + encodeURIComponent(saleToReceiptText(shipment));
+        if(_waWin) _waWin.location.href = __url;
+        else { const w = window.open(__url, "_blank"); if(!w) window.location.href = __url; }
+      }
+    }catch(e){}
+
+
  await autoBackupToFolder("envio_pendiente");
 
     // reset carrito + descuento
@@ -2535,33 +2615,6 @@ async function checkout(){
     if(state.view==="inventory") renderInventory();
     updateReceiptPreview();
     if(state.view==="shipments") renderShipments();
-
-    // Auto descargas SOLO si quieres (respetamos tu setting auto)
-    // Nota: aunque sea pendiente, puedes generar comprobante para el cliente; NO cuenta como venta.
-    // IMPORTANTÍSIMO: el navegador puede BLOQUEAR descargas múltiples automáticas.
-    // Priorizamos 1 sola descarga automática por venta:
-    // - Si autoPNG está activo => descargamos PNG.
-    // - Si NO, pero autoPDF está activo => descargamos PDF.
-    if(state.settings.autoPNG){
-      try{ await downloadReceiptPNG(); }catch(e){}
-    }else if(state.settings.autoPDF){
-      try{ generatePDF(); }catch(e){}
-    }
-// WhatsApp auto: si hay teléfono, abre chat con el recibo
-    try{
-      const __url = (function(){
-        const r = state.lastReceipt;
-        const txt = saleToReceiptText(r);
-        const ph = (getClientPhoneFromReceipt(r) || _waPhonePre);
-        return ph ? ("https://wa.me/" + ph + "?text=" + encodeURIComponent(txt)) : "";
-      })();
-      if(__url){
-        if(_waWin) _waWin.location.href = __url;
-        else { const w = window.open(__url, "_blank"); if(!w) window.location.href = __url; }
-      }else if(_waWin){
-        try{ _waWin.close(); }catch(e){}
-      }
-    }catch(e){}
 
     showOkModal("Registro exitoso","", {enter:true});
     return;
@@ -2940,9 +2993,24 @@ function updateReceiptPreview(){
     for(const it of (s.items||[])){
       const line = document.createElement("div");
       line.className="line";
-      line.innerHTML = `<span>${it.qty} x ${escapeHtml(it.name)}</span><span>${money(it.qty*it.price)}</span>`;
+      {
+      const gross = Number(it.qty||0)*Number(it.price||0);
+      const disc = Math.min(gross, Math.max(0, Number(it.discValue||0)));
+      const net = Math.max(0, gross - disc);
+
+      line.innerHTML = `<span>${it.qty} x ${escapeHtml(it.name)}</span><span>${money(net)}</span>`;
       itemsDiv.appendChild(line);
+
+      // 🆕 mostrar descuento por producto si existe
+      if(disc>0){
+        const dline = document.createElement("div");
+        dline.className = "line muted";
+        dline.innerHTML = `<span>Descuento</span><span>-${money(disc)}</span>`;
+        itemsDiv.appendChild(dline);
+      }
+      continue;
     }
+}
 
     $("rSub").textContent = money(s.subtotal ?? cartSubtotal());
     $("rDisc").textContent = money(s.discountAmount ?? cartDiscountAmount(s.subtotal ?? cartSubtotal()));
@@ -3458,7 +3526,7 @@ async function downloadReceiptPNG(){
     const node = buildEnvLabelNode(s);
     document.body.appendChild(node);
     fitEnvLabelToBox(node);
-    await ensureLogoOrAsk(node);
+    // ensureLogoOrAsk removed to prevent browser blocking
 
     try{
       const scale = Number(state.settings.envPngScale || 2);
@@ -4559,7 +4627,7 @@ async function refreshKPIs(){
 
   // Opcional: cambia el título visual del panel para que diga TURNO ACTUAL
   const pill = document.querySelector(".sidecard .pill");
-  if(pill) pill.textContent = "💵Tus Ventas Hoy.";
+  if(pill) pill.textContent = "💗 TUS VENTAS TURNO ACTUAL";
 }
 
 function sanitizeSettings(){
@@ -4962,12 +5030,24 @@ onClick("btnClearDisc", ()=>{
   $("cartBody").addEventListener("click",(e)=>{
     const b = e.target.closest("button[data-act]");
     if(!b) return;
-    const code = b.dataset.code;
+    const id = b.dataset.id;
     const act = b.dataset.act;
-    if(act==="minus") cartInc(code,-1);
-    if(act==="plus")  cartInc(code, 1);
-    if(act==="del")   { state.cart = state.cart.filter(x=>x.code!==code); renderCart(); }
+    if(act==="minus") cartInc(id,-1);
+    if(act==="plus")  cartInc(id, 1);
+    if(act==="del")   { state.cart = state.cart.filter(x=>String(x.id)!==String(id)); renderCart(); }
   });
+
+  // Descuento por producto: al cambiar el campo, recalcula al instante
+  $("cartBody").addEventListener("change",(e)=>{
+    const el = e.target;
+    if(!el || el.dataset.act!=="discVal") return;
+    const id = el.dataset.id;
+    const it = (state.cart||[]).find(x=>String(x.id)===String(id));
+    if(!it) return;
+    it.discValue = Math.max(0, Number(el.value||0));
+    renderCart();
+  });
+
 
   $("btnClearCart").addEventListener("click", cartClear);
 
