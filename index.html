@@ -1614,8 +1614,31 @@ function calcSubtotal(){
   return (state.cart||[]).reduce((sum,it)=> sum + lineGross(it),0);
 }
 
-function calcDiscount(){
+function calcLineDiscount(){
   return (state.cart||[]).reduce((sum,it)=> sum + lineItemDiscount(it),0);
+}
+
+// Descuento general (Q o %), aplicado DESPUÉS del descuento por producto
+function calcGeneralDiscount(baseAfterLineDisc){
+  const d = state.discount || {type:"NONE", value:0};
+  const base = Math.max(0, Number(baseAfterLineDisc||0));
+  const v = Math.max(0, Number(d.value||0));
+
+  if(!d.type || d.type==="NONE" || v<=0) return 0;
+
+  if(d.type==="PCT"){
+    const pct = Math.min(100, v);
+    return Math.min(base, base * (pct/100));
+  }
+  // d.type === "Q"
+  return Math.min(base, v);
+}
+
+// Total de descuento = (por producto) + (general)
+function calcDiscount(){
+  const lineDisc = calcLineDiscount();
+  const baseAfter = Math.max(0, calcSubtotal() - lineDisc);
+  return Math.min(calcSubtotal(), lineDisc + calcGeneralDiscount(baseAfter));
 }
 
 function calcGrand(){
