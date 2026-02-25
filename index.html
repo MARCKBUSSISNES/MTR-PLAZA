@@ -1,4 +1,3 @@
-var indic = "";
 <!doctype html>
 <html lang="es">
 <head>
@@ -596,6 +595,8 @@ var indic = "";
 /* --- UI cleanup: Generador --- */
 #genCreatePanelMB{display:none!important;}
 
+
+  .cartEnvioRow td{border:none !important;}
 </style>
 </head>
 <body>
@@ -762,7 +763,7 @@ var indic = "";
                   <option value="EFECTIVO">EFECTIVO</option>
                   <option value="TARJETA">TARJETA</option>
                   <option value="TRANSFERENCIA">TRANSFERENCIA</option>
-                  <option value="MIXTO">MIXTO (EFECTIVO + TARJETA)</option>
+                  <option value="MIXTO">MIXTO (HASTA 3: EFECTIVO + TARJETA + TRANSFERENCIA)</option>
                 </select>
               </div>
 
@@ -776,6 +777,10 @@ var indic = "";
                   <div style="flex:1">
                     <div class="muted" style="margin-bottom:6px">Tarjeta (Q)</div>
                     <input id="mixCard" type="number" min="0" step="0.01" placeholder="0.00"/>
+                  </div>
+                  <div style="flex:1">
+                    <div class="muted" style="margin-bottom:6px">Transferencia (Q)</div>
+                    <input id="mixTrans" type="number" min="0" step="0.01" placeholder="0.00"/>
                   </div>
                 </div>
                 <div class="muted" style="margin-top:6px">La suma debe ser igual al total.</div>
@@ -1022,6 +1027,7 @@ var indic = "";
               <table class="table">
                 <thead>
                   <tr>
+                    
                     <th>Código</th>
                     <th>Producto</th>
                     <th>Precio</th>
@@ -1085,6 +1091,7 @@ var indic = "";
             <table class="table">
               <thead>
                 <tr>
+                  
                   <th>Código</th>
                   <th>Producto</th>
                   <th>Precio</th>
@@ -1123,7 +1130,7 @@ var indic = "";
           <tr>
             <th>Fecha</th>
             <th>Tipo</th>
-            <th>Código</th>
+            
             <th>Producto</th>
             <th style="text-align:right">Cantidad</th>
             <th style="text-align:right">Stock</th>
@@ -1634,6 +1641,31 @@ function calcGeneralDiscount(baseAfterLineDisc){
   return Math.min(base, v);
 }
 
+
+// Cargo automático por envío (se cobra al cliente)
+function calcShippingFee(){
+  try{
+    const st = $("saleType")?.value || "MOSTRADOR";
+    return (st==="ENVIO") ? 35 : 0;
+  }catch(e){
+    return 0;
+  }
+}
+
+function makeShippingItem(fee){
+  const f = Number(fee||0);
+  return {
+    code: "ENVIO",
+    name: "ENVIO Q"+f.toFixed(2),
+    qty: 1,
+    price: Number(f.toFixed(2)),
+    discType: "NONE",
+    discValue: 0,
+    noInventory: true,
+    service: true
+  };
+}
+
 // Total de descuento = (por producto) + (general)
 function calcDiscount(){
   const lineDisc = calcLineDiscount();
@@ -1642,7 +1674,7 @@ function calcDiscount(){
 }
 
 function calcGrand(){
-  return Math.max(0, calcSubtotal() - calcDiscount());
+  return Math.max(0, calcSubtotal() - calcDiscount() + calcShippingFee());
 }
 // -------- Compat helpers (evita errores por funciones renombradas) --------
 function cartSubtotal(){ return calcSubtotal(); }
@@ -1794,6 +1826,35 @@ function idbAll(store){
     r.onerror=()=>rej(r.error);
   });
 }
+
+// ============================================================
+// Costos en ventas (snapshot)
+// - Guarda costAtSale y costTotal en cada item vendido para calcular ganancias históricas
+// - Para items especiales (ENVIO) o sin producto, costAtSale = 0
+// ============================================================
+async function enrichItemsWithCost(items){
+  const out = [];
+  for(const x of (items||[])){
+    let costAtSale = 0;
+    try{
+      // products store usa keyPath "code"
+      const p = x && x.code ? await idbGet("products", x.code) : null;
+      const raw = (p && (p.cost!=null)) ? Number(p.cost||0) : Number(x?.costAtSale ?? x?.cost ?? 0);
+      costAtSale = isFinite(raw) ? raw : 0;
+    }catch(e){
+      costAtSale = Number(x?.costAtSale ?? x?.cost ?? 0) || 0;
+    }
+    // ENVIO (noInventory) no tiene costo de producto
+    if(x && (x.noInventory===true || String(x.type||"").toUpperCase()==="ENVIO" || String(x.name||"").toUpperCase().includes("ENVIO"))){
+      costAtSale = 0;
+    }
+    const qty = Number(x?.qty ?? x?.cantidad ?? 0) || 0;
+    const costTotal = Number((qty * costAtSale).toFixed(2));
+    out.push({ ...x, costAtSale: Number(costAtSale.toFixed(2)), costTotal });
+  }
+  return out;
+}
+
 function idbClearAll(){
   return Promise.all([
     new Promise((res,rej)=>{ const r=db.transaction("clients","readwrite").objectStore("clients").clear(); r.onsuccess=()=>res(true); r.onerror=()=>rej(r.error); }),
@@ -2294,7 +2355,7 @@ function exportInventoryExcel(){
       <table>
         <thead>
           <tr>
-            <th>Código</th>
+            
             <th>Nombre</th>
             <th class="num">Precio (Q)</th>
             <th class="num">Costo (Q)</th>
@@ -2454,6 +2515,7 @@ function requireClientIfShipping(){
 
 async function validateStockForCart(){
   for(const it of state.cart){
+    if(it && (it.noInventory || it.service)) continue;
     const p = await getProductByCode(it.code);
     if(!p) return {ok:false, msg:"Producto no existe: " + it.code};
     if(Number(p.stock||0) < it.qty) return {ok:false, msg:`Stock insuficiente para "${p.name}". Stock:${p.stock} Cant:${it.qty}`};
@@ -2463,6 +2525,7 @@ async function validateStockForCart(){
 
 async function deductStockForCart(refType="VENTA", refId="", note=""){
   for(const it of state.cart){
+    if(it && (it.noInventory || it.service)) continue;
     const p = await getProductByCode(it.code);
     p.stock = Number(p.stock||0) - it.qty;
     p.updatedAt = Date.now();
@@ -2483,6 +2546,7 @@ async function deductStockForCart(refType="VENTA", refId="", note=""){
 
 async function restoreStockForItems(items, refType="", refId="", note=""){
   for(const it of (items||[])){
+    if(it && (it.noInventory || it.service)) continue;
     const p = await getProductByCode(it.code);
     if(!p) continue;
     p.stock = Number(p.stock||0) + Number(it.qty||0);
@@ -2525,21 +2589,27 @@ async function checkout(){
   let payMethod = $("payMethod").value;
   let paySplit = null;
   if(payMethod==="MIXTO"){
-    const subtotalTmp = cartSubtotal();
-    const discountAmountTmp = cartDiscountAmount(subtotalTmp);
-    const totalTmp = Math.max(subtotalTmp - discountAmountTmp, 0);
+    // ✅ MIXTO: hasta 3 formas (Efectivo + Tarjeta + Transferencia)
+    const totalTmp = Number((cartTotal()).toFixed(2));
 
-    const cash = Number($("mixCash")?.value || 0);
-    const card = Number($("mixCard")?.value || 0);
-    if(!isFinite(cash) || cash<0) return alert("Efectivo inválido.");
-    if(!isFinite(card) || card<0) return alert("Tarjeta inválida.");
+    const cash  = Number($("mixCash")?.value  || 0);
+    const card  = Number($("mixCard")?.value  || 0);
+    const trans = Number($("mixTrans")?.value || 0);
 
-    const sum = Number((cash + card).toFixed(2));
+    if(!isFinite(cash)  || cash<0)  return alert("Efectivo inválido.");
+    if(!isFinite(card)  || card<0)  return alert("Tarjeta inválida.");
+    if(!isFinite(trans) || trans<0) return alert("Transferencia inválida.");
+
+    const sum = Number((cash + card + trans).toFixed(2));
     const tot = Number(totalTmp.toFixed(2));
     if(Math.abs(sum - tot) > 0.01){
-      return alert("Pago mixto: la suma de Efectivo + Tarjeta debe ser igual al total.");
+      return alert("Pago mixto: la suma de Efectivo + Tarjeta + Transferencia debe ser igual al total.");
     }
-    paySplit = { EFECTIVO: Number(cash.toFixed(2)), TARJETA: Number(card.toFixed(2)) };
+    paySplit = {
+      EFECTIVO: Number(cash.toFixed(2)),
+      TARJETA: Number(card.toFixed(2)),
+      TRANSFERENCIA: Number(trans.toFixed(2))
+    };
   }
 
   // WhatsApp auto (si hay teléfono). Abrimos una pestaña en blanco YA (para evitar bloqueos por popups en async).
@@ -2551,7 +2621,8 @@ async function checkout(){
 
   const subtotal = cartSubtotal();
   const discountAmount = cartDiscountAmount(subtotal);
-  const total = Math.max(subtotal - discountAmount, 0);
+  const shippingFee = (saleType==="ENVIO") ? 35 : 0;
+  const total = Math.max(subtotal - discountAmount + shippingFee, 0);
 
   const ts = Date.now();
   const id = "S-" + ts + "-" + Math.random().toString(16).slice(2,8);
@@ -2578,11 +2649,12 @@ async function checkout(){
     paySplit,
       status: "PENDIENTE",
       client: client ? { phone:client.phone, names:client.names, last:client.last, nit:(client.nit||""), addr:client.addr, indic:client.indic } : null,
-      items: state.cart.map(x=>({...x})),
+      items: await enrichItemsWithCost([...state.cart, ...(saleType==="ENVIO" ? [makeShippingItem(shippingFee)] : [])]),
       subtotal: Number(subtotal.toFixed(2)),
       discountType: state.discount.type,
       discountValue: Number(state.discount.value||0),
       discountAmount: Number(discountAmount.toFixed(2)),
+      shippingFee: Number((shippingFee||0).toFixed(2)),
       total: Number(total.toFixed(2)),
       receiptNo: pad(receiptNo, 6),
       shop: state.settings.shopName || "Tienda de Ropa",
@@ -2632,6 +2704,25 @@ async function checkout(){
     syncDiscUI();
     cartClear();
 
+    // ✅ Resetear tipo de venta y método de pago para que NO quede el Q35 pegado
+    try{
+      const stSel = $("saleType");
+      if(stSel){
+        stSel.value = "MOSTRADOR";
+        try{ stSel.dispatchEvent(new Event("change",{bubbles:true})); }catch(e){}
+      }
+      const pmSel = $("payMethod");
+      if(pmSel) pmSel.value = "EFECTIVO";
+      $("mixCash") && ($("mixCash").value = "");
+      $("mixCard") && ($("mixCard").value = "");
+      $("mixTrans") && ($("mixTrans").value = "");
+      handlePayMethodUI();
+      // fuerza recálculo visual por si el UI no se actualizó
+      if(typeof renderCart === "function") renderCart();
+      if(typeof updateReceiptPreview === "function") updateReceiptPreview();
+          try{ setTimeout(()=>{ try{ updateReceiptPreview(); }catch(e){} }, 60); }catch(e){}
+    }catch(e){}
+
     // limpiar UI + KPIs
     await refreshKPIs();
     refreshProductPicker();
@@ -2650,12 +2741,14 @@ async function checkout(){
     weekKey: weekKey(ts),
     monthKey: monthKey(ts),
     saleType, payMethod,
+    paySplit,
     client: client ? { phone:client.phone, names:client.names, last:client.last, nit:(client.nit||""), addr:client.addr } : null,
-    items: state.cart.map(x=>({...x})),
+    items: await enrichItemsWithCost(state.cart),
     subtotal: Number(subtotal.toFixed(2)),
     discountType: state.discount.type,
     discountValue: Number(state.discount.value||0),
     discountAmount: Number(discountAmount.toFixed(2)),
+    shippingFee: Number((shippingFee||0).toFixed(2)),
     total: Number(total.toFixed(2)),
     receiptNo: pad(receiptNo, 6),
     shop: state.settings.shopName || "Tienda de Ropa",
@@ -2776,12 +2869,14 @@ async function markShipmentPaid(id){
     monthKey: monthKey(ts),
     saleType: "ENVIO",
     payMethod: s.payMethod,
+    paySplit: s.paySplit || null,
     client: s.client || null,
-    items: (s.items||[]).map(x=>({...x})),
+    items: await enrichItemsWithCost(s.items||[]),
     subtotal: Number((s.subtotal ?? s.total ?? 0).toFixed(2)),
     discountType: s.discountType || "NONE",
     discountValue: Number(s.discountValue||0),
     discountAmount: Number((s.discountAmount ?? 0).toFixed(2)),
+    shippingFee: Number((s.shippingFee ?? 0).toFixed(2)),
     total: Number((s.total ?? 0).toFixed(2)),
     receiptNo: s.receiptNo,
     shop: s.shop || state.settings.shopName || "Tienda de Ropa",
@@ -2894,17 +2989,32 @@ function applyEnvReceiptSizing(saleType){
 function makeLiveReceipt(){
   const saleType = $("saleType").value;
   const payMethod = $("payMethod").value;
+
+  // ✅ MIXTO: capturar split en vivo (para recibo/PNG/PDF/WhatsApp)
+  let paySplit = null;
+  if(payMethod==="MIXTO"){
+    const cash  = Number($("mixCash")?.value || 0);
+    const card  = Number($("mixCard")?.value || 0);
+    const trans = Number($("mixTrans")?.value || 0);
+    paySplit = {
+      EFECTIVO: Number((isFinite(cash)?cash:0).toFixed(2)),
+      TARJETA: Number((isFinite(card)?card:0).toFixed(2)),
+      TRANSFERENCIA: Number((isFinite(trans)?trans:0).toFixed(2))
+    };
+  }
   const c = (saleType==="ENVIO") ? state.selectedClient : (state.selectedClient || null);
   return {
     ts: Date.now(),
     receiptNo: state.lastReceipt?.receiptNo || String($("rNo").textContent||"").replace("#","") || "------",
     shop: state.settings.shopName,
     saleType, payMethod,
+    paySplit,
     status: (saleType==="ENVIO") ? "PENDIENTE" : "PAGADO",
     client: c ? {phone:c.phone, names:c.names, last:c.last, nit:(c.nit||""), addr:c.addr, indic:c.indic} : null,
     items: state.cart.map(x=>({...x})),
     subtotal: cartSubtotal(),
     discountAmount: cartDiscountAmount(cartSubtotal()),
+    shippingFee: calcShippingFee(),
     total: cartTotal()
   };
 }
@@ -2923,7 +3033,7 @@ function saleToReceiptText(s){
   lines.push(`Fecha: ${d}`);
   if(status) lines.push(status);
   if(s.payMethod==="MIXTO" && s.paySplit){
-  lines.push(`Tipo: ${s.saleType} | Pago: MIXTO (E:${money(s.paySplit.EFECTIVO||0)} + T:${money(s.paySplit.TARJETA||0)})`);
+  lines.push(`Tipo: ${s.saleType} | Pago: MIXTO (E:${money(s.paySplit.EFECTIVO||0)} + T:${money(s.paySplit.TARJETA||0)} + TR:${money(s.paySplit.TRANSFERENCIA||0)})`);
 }else{
   lines.push(`Tipo: ${s.saleType} | Pago: ${s.payMethod}`);
 }
@@ -2938,6 +3048,7 @@ function saleToReceiptText(s){
   lines.push(`--------------------------------`);
   lines.push(`SUBTOTAL: ${money(s.subtotal ?? s.total)}`);
   lines.push(`DESCUENTO: ${money(s.discountAmount ?? 0)}`);
+  if(Number(s.shippingFee||0)>0) lines.push(`ENVÍO: ${money(s.shippingFee)}`);
   lines.push(`TOTAL: *${money(s.total)}*`);
   lines.push(`Gracias por tu compra 💗`);
   return lines.join("\n"); // <- SALTOS REALES
@@ -2994,14 +3105,32 @@ function updateReceiptPreview(){
     if(payLine) payLine.classList.add("hide");
     if(totLine) totLine.classList.add("hide");
 
-    const line = document.createElement("div");
-    line.className = "line";
-    if(pay === "EFECTIVO"){
-      line.innerHTML = `<span>Total</span><span>${money(s.total ?? cartTotal())}</span>`;
-    }else{
-      line.innerHTML = `<span>Pago</span><span>${escapeHtml(pay)}</span>`;
-    }
-    itemsDiv.appendChild(line);
+    const fee = Number(s.shippingFee ?? calcShippingFee() ?? 0);
+    const isCash = (pay === "EFECTIVO");
+
+    // Totales: en ENVÍO mostramos "TOTAL" como SOLO productos (sin envío)
+    const fullTotal = Number((s.total ?? cartTotal()) || 0);
+    const prodTotal = Math.max(0, fullTotal - fee);
+    const cobrar = Math.max(0, prodTotal + fee);
+
+    // ✅ ENVÍO: mostrar claramente el cargo de envío y el total de productos.
+    const l1 = document.createElement("div");
+    l1.className = "line";
+    l1.innerHTML = `<span>Envío</span><span>${money(fee)}</span>`;
+    itemsDiv.appendChild(l1);
+
+    const l2 = document.createElement("div");
+    l2.className = "line";
+    l2.innerHTML = `<span>Total</span><span>${money(prodTotal)}</span>`;
+    itemsDiv.appendChild(l2);
+
+    // ✅ Pago:
+    // - EFECTIVO: cobrar productos + envío
+    // - TARJETA/TRANSFERENCIA: mostrar SOLO la forma de pago (sin monto)
+    const l3 = document.createElement("div");
+    l3.className = "line";
+    l3.innerHTML = `<span>Pago</span><span>${isCash ? (money(cobrar) + " EFECTIVO") : pay}</span>`;
+    itemsDiv.appendChild(l3);
   }else{
     // MOSTRADOR: comportamiento actual (detalle + totales)
     const subLine  = $("rSubLine");
@@ -3049,12 +3178,11 @@ function handlePayMethodUI(){
   if(!wrap) return;
   if(pm==="MIXTO"){
     wrap.style.display = "";
-    // Autocompletar tarjeta con el restante
-    const subtotal = cartSubtotal();
-    const disc = cartDiscountAmount(subtotal);
-    const total = Math.max(subtotal - disc, 0);
+    // Autocompletar Tarjeta con el restante (hasta 3 formas: Efectivo + Tarjeta + Transferencia)
+    const total = Number((cartTotal()).toFixed(2));
     const cash = Number($("mixCash")?.value || 0);
-    const card = Math.max(0, Number((total - cash).toFixed(2)));
+    const trans = Number($("mixTrans")?.value || 0);
+    const card = Math.max(0, Number((total - cash - trans).toFixed(2)));
     if($("mixCard")) $("mixCard").value = isFinite(card) ? card : 0;
   }else{
     wrap.style.display = "none";
@@ -3354,6 +3482,8 @@ function buildEnvLabelNode(s){
   // Total / Pago
   const total = (s.total ?? s.grandTotal ?? 0);
   const pay   = (s.payMethod || s.paymentMethod || "EFECTIVO").toString().toUpperCase();
+  const fee   = Number(s.shippingFee ?? 35);
+  const prodTotal = Math.max(0, Number(total) - fee);
   const isCash = (pay === "EFECTIVO" || pay === "CASH");
 
   // Logo: preferir DataURL guardado para evitar fallos al exportar
@@ -3475,20 +3605,28 @@ function buildEnvLabelNode(s){
 
   payBox.innerHTML = isCash
     ? `
-      <div style="display:flex;justify-content:space-between;font-weight:1300;font-size:22px;">
-        <span>TOTAL</span><span>${money(total)}</span>
+      <div style="display:flex;justify-content:space-between;font-weight:1300;font-size:18px;">
+        <span>ENVÍO</span><span>${money(fee)}</span>
       </div>
-      <div style="margin-top:4px;font-weight:1200;font-size:18px;">
-        <span style="opacity:.95">PAGO:</span> <span style="font-weight:1400">${escapeHtml(pay)}</span>
+      <div style="display:flex;justify-content:space-between;font-weight:1400;font-size:22px;margin-top:2px;">
+        <span>TOTAL</span><span>${money(prodTotal)}</span>
+      </div>
+      <div style="margin-top:4px;font-weight:1200;font-size:16px;">
+        <span style=\"opacity:.95\">PAGO:</span> <span style=\"font-weight:1400\">${isCash ? (money(total)+" EFECTIVO") : pay}</span>
       </div>
     `
     : `
-      <div style="display:flex;justify-content:space-between;font-weight:1300;font-size:20px;">
-        <span>PAGO</span><span style="font-weight:1400">${escapeHtml(pay)}</span>
+      <div style="display:flex;justify-content:space-between;font-weight:1300;font-size:18px;">
+        <span>ENVÍO</span><span>${money(fee)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-weight:1400;font-size:22px;margin-top:2px;">
+        <span>TOTAL</span><span>${money(prodTotal)}</span>
+      </div>
+      <div style="margin-top:4px;font-weight:1200;font-size:16px;">
+        <span style="opacity:.95">PAGO:</span> <span style="font-weight:1400">${isCash ? (money(total)+" EFECTIVO") : pay}</span>
       </div>
     `;
-
-  wrap.appendChild(payBox);
+wrap.appendChild(payBox);
 
   return wrap;
 }
@@ -3936,9 +4074,23 @@ function closeToText(c){
   lines.push(`TRANSFER.: ${money(c.diff?.TRANSFERENCIA||0)}`);
   lines.push(`TOTAL: ${money(c.diffTotal||0)}`);
   lines.push(`--------------------------------`);
+  lines.push(`Detalle de ventas:`);
+  if((c.details||[]).length===0){
+    lines.push(`(Sin detalle en este rango)`);
+  }else{
+    for(const d of c.details.slice(0,120)){
+      const t = new Date(d.ts||0).toLocaleTimeString();
+      let pm = d.payMethod || "";
+      if(pm==="MIXTO" && d.paySplit){
+        pm = `MIXTO E:${money(d.paySplit.EFECTIVO||0)} T:${money(d.paySplit.TARJETA||0)} Tr:${money(d.paySplit.TRANSFERENCIA||0)}`;
+      }
+      lines.push(`- #${d.receiptNo||""} ${t} ${d.saleType||""} ${pm} ${money(d.total||0)}`);
+    }
+  }
+  lines.push(`--------------------------------`);
   lines.push(`Productos vendidos:`);
   for(const p of c.products){
-    lines.push(`- ${p.qty} x ${p.name} (${p.code})`);
+    lines.push(`- ${p.qty} x ${p.name} `);
   }
   lines.push(`--------------------------------`);
   lines.push(`Cierre generado ✅`);
@@ -3950,6 +4102,7 @@ function closeToPrintableHTML(c){
     <tr>
       <td style="text-align:center">${p.qty}</td>
       <td>${escapeHtml(p.name)}<br><small>${escapeHtml(p.code)}</small></td>
+      <td style="text-align:right">${money(p.amount||0)}</td>
     </tr>
   `).join("");
 
@@ -4112,7 +4265,7 @@ function closeToPrintableHTML(c){
 
       <h3 style="margin-top:14px">Productos vendidos</h3>
       <table>
-        <thead><tr><th style="width:80px;text-align:center">Cant</th><th>Producto</th></tr></thead>
+        <thead><tr><th style="width:80px;text-align:center">Cant</th><th>Producto</th><th style="width:120px;text-align:right">Total</th></tr></thead>
         <tbody>${rows || `<tr><td colspan="2">Sin ventas</td></tr>`}</tbody>
       </table>
 
@@ -4188,20 +4341,44 @@ async function buildClose(){
     if(s.payMethod==="MIXTO" && s.paySplit){
       pay.EFECTIVO = (pay.EFECTIVO||0) + Number(s.paySplit.EFECTIVO||0);
       pay.TARJETA  = (pay.TARJETA||0)  + Number(s.paySplit.TARJETA||0);
+      pay.TRANSFERENCIA = (pay.TRANSFERENCIA||0) + Number(s.paySplit.TRANSFERENCIA||0);
     }else{
       pay[s.payMethod] = (pay[s.payMethod]||0) + Number(s.total||0);
     }
 
-    for(const it of (s.items||[])){
+    // Preparar prorrateo de descuento general por venta (si existe)
+    const __items = (s.items||[]);
+    let __lineDiscSum = 0;
+    let __netAfterLineSum = 0;
+    for(const it of __items){
+      const g = Number(it.qty||0) * Number(it.price||0);
+      const d = Math.min(g, Math.max(0, Number(it.discValue||0)));
+      __lineDiscSum += d;
+      __netAfterLineSum += Math.max(0, g - d);
+    }
+    const __totalDisc = Number(s.discountAmount ?? 0);
+    const __generalDisc = Math.max(0, __totalDisc - __lineDiscSum);
+
+    for(const it of __items){
       const key = it.code;
-      const cur = prodMap.get(key) || {code:it.code, name:it.name, qty:0};
+      const cur = prodMap.get(key) || {code:it.code, name:it.name, qty:0, amount:0};
       cur.qty += Number(it.qty||0);
+
+      const g = Number(it.qty||0) * Number(it.price||0);
+      const d = Math.min(g, Math.max(0, Number(it.discValue||0)));
+      const netLine = Math.max(0, g - d);
+
+      // Prorrateo del descuento general proporcional al neto por línea
+      const pr = (__generalDisc>0 && __netAfterLineSum>0) ? (__generalDisc * (netLine / __netAfterLineSum)) : 0;
+      const netFinal = Math.max(0, netLine - pr);
+
+      cur.amount += netFinal;
       cur.name = it.name;
       prodMap.set(key, cur);
     }
   }
 
-  const products = [...prodMap.values()].sort((a,b)=>b.qty-a.qty);
+  const products = [...prodMap.values()].map(p=>({ ...p, amount: Number((p.amount||0).toFixed(2)) })).sort((a,b)=>b.qty-a.qty);
 
   // render historial tabla
   const hb = $("closeHistBody");
@@ -4253,6 +4430,7 @@ async function buildClose(){
     subtotal: Number(subtotal.toFixed(2)),
     discounts: Number(discounts.toFixed(2)),
     total: Number(total.toFixed(2)),
+    details: list.map(s=>({ts:s.ts, receiptNo:s.receiptNo, saleType:s.saleType, total:s.total, payMethod:s.payMethod, paySplit:(s.paySplit||null)})),
     products,
     real: {EFECTIVO: realCash, TARJETA: realCard, TRANSFERENCIA: realTrans},
     diff,
@@ -4304,7 +4482,7 @@ async function buildClose(){
     for(const p of close.products.slice(0,50)){
       const div = document.createElement("div");
       div.className="line";
-      div.innerHTML = `<span>${p.qty} x ${escapeHtml(p.name)}</span><span><small>${escapeHtml(p.code)}</small></span>`;
+      div.innerHTML = `<span>${p.qty} x ${escapeHtml(p.name)}</span><span>${money(p.amount||0)} <small>${escapeHtml(p.code)}</small></span>`;
       cp.appendChild(div);
     }
   }
@@ -4430,7 +4608,7 @@ async function viewSavedClose(id){
     for(const p of (c.products||[]).slice(0,50)){
       const div = document.createElement("div");
       div.className="line";
-      div.innerHTML = `<span>${p.qty} x ${escapeHtml(p.name)}</span><span><small>${escapeHtml(p.code)}</small></span>`;
+      div.innerHTML = `<span>${p.qty} x ${escapeHtml(p.name)}</span><span>${money(p.amount||0)} <small>${escapeHtml(p.code)}</small></span>`;
       cp.appendChild(div);
     }
   }
@@ -5123,6 +5301,7 @@ $("saleType").addEventListener("change", ()=>{
 
   $("payMethod").addEventListener("change", ()=>{ handlePayMethodUI(); updateReceiptPreview(); });
   $("mixCash")?.addEventListener("input", ()=>{ handlePayMethodUI(); updateReceiptPreview(); });
+  $("mixTrans")?.addEventListener("input", ()=>{ handlePayMethodUI(); updateReceiptPreview(); });
   $("mixCard")?.addEventListener("input", ()=>{ updateReceiptPreview(); });
 
 
