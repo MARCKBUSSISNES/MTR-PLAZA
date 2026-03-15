@@ -489,7 +489,7 @@ document.addEventListener("keydown", (e)=>{
 function requireBackupCode(action){
   const code = prompt(`Ingrese el código para ${action}:`);
   if(code===null) return false;
-  if(String(code).trim() !== "22782522"){
+  if(String(code).trim() !== "2512"){
     alert("Código incorrecto.");
     return false;
   }
