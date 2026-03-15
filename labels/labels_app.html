@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Generador de etiquetas</title>
+  <link rel="stylesheet" href="labels_app.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logoBox"><img id="logoImg" alt="logo"></div>
+        <div>
+          <h1>Generador de etiquetas</h1>
+          <p>Conectado al inventario principal</p>
+        </div>
+      </div>
+      <div class="pill" id="syncPill">Esperando inventario…</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 style="margin:0 0 10px">Cola de etiquetas</h2>
+        <div class="row">
+          <input id="qSearch" class="grow" placeholder="Buscar por código o nombre">
+          <button class="btn secondary" id="btnRefresh" type="button">Refrescar</button>
+          <button class="btn danger" id="btnWipe" type="button">Borrar todo</button>
+        </div>
+
+        <div class="form" style="margin-top:10px">
+          <div class="field full">
+            <label>Producto</label>
+            <select id="pick"></select>
+          </div>
+          <div class="field">
+            <label>Cantidad</label>
+            <input id="qty" type="number" min="1" value="1">
+          </div>
+          <div class="field">
+            <label>Ancho etiqueta (mm)</label>
+            <input id="lblW" type="number" min="20" step="0.1" value="50">
+          </div>
+          <div class="field">
+            <label>Alto etiqueta (mm)</label>
+            <input id="lblH" type="number" min="20" step="0.1" value="25">
+          </div>
+          <div class="field">
+            <label>Orientación</label>
+            <select id="lblOri">
+              <option value="landscape">Horizontal</option>
+              <option value="portrait">Vertical</option>
+              <option value="AUTO">Automática</option>
+            </select>
+          </div>
+          <div class="field full">
+            <div class="row">
+              <button class="btn" id="btnAddToQueue" type="button">Agregar</button>
+              <button class="btn secondary" id="btnClearQueue" type="button">Limpiar cola</button>
+              <button class="btn" id="btnPDF" type="button">Abrir PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>SKU</th><th>Nombre</th><th>Precio</th><th>Cant.</th><th style="width:140px">Acción</th></tr>
+          </thead>
+          <tbody id="queueBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:0 0 10px">Vista previa</h2>
+        <div class="preview">
+          <div class="previewHead">
+            <div id="pvName">—</div>
+            <div id="pvPrice">Q0.00</div>
+          </div>
+          <div class="barBox"><svg id="pvBarcode"></svg></div>
+        </div>
+
+        <div class="card" style="margin-top:14px;background:rgba(44,70,87,.35)">
+          <h2 style="margin:0 0 10px">Importar / Exportar</h2>
+          <div class="row">
+            <button class="btn secondary" id="btnExcel" type="button">Importar Excel</button>
+            <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" class="hide">
+            <button class="btn secondary" id="btnExport" type="button">Exportar JSON</button>
+          </div>
+          <div class="muted" style="margin-top:8px">Excel esperado: columnas SKU, NOMBRE, PRECIO y opcional STOCK.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="labels_app.js"></script>
+</body>
+</html>
