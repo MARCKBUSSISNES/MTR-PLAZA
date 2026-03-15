@@ -622,7 +622,7 @@ async function exportJSON(){
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "pos_boutique_backup.json";
+  a.download = "MTR_BACKUP.json";
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
