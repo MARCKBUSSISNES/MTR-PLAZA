@@ -47,10 +47,42 @@ async function openSaleDetailModal(record, kind='sale'){
   const content = $('saleDetailContent');
   if(!overlay || !title || !sub || !content) return;
 
+  // 🔥 ABRIR MODAL CORRECTAMENTE
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden', 'false');
+
   let linkedShipment = null;
   if(kind === 'sale' && record.shipmentId){
     try{ linkedShipment = await idbGet('shipments', record.shipmentId); }catch(e){}
   }
+
+  // ⚠️ DESDE AQUÍ DEJA TU CÓDIGO TAL CUAL LO TENÍAS
+  const isShipment = (record.saleType === 'ENVIO') || kind === 'shipment';
+  const productTotal = Number((record.productTotal ?? Math.max(Number((record.total||0) - Number(record.shippingFee||0)), 0)).toFixed(2));
+  const shippingFee = Number(record.shippingFee || 0);
+  const createdAt = kind === 'shipment' ? record.ts : (linkedShipment?.ts || record.ts);
+  const paidAt = kind === 'shipment' ? (record.paidAt || null) : (record.paidAt || linkedShipment?.paidAt || null);
+  const status = kind === 'shipment' ? (record.status || 'PENDIENTE') : 'PAGADO';
+  const client = record.client || null;
+  const clientName = saleDetailClientName(record);
+  const sourceLabel = kind === 'shipment' ? 'Envíos' : 'Reportes';
+
+  title.textContent = kind === 'shipment'
+    ? `Detalle de envío #${record.receiptNo||''}`
+    : `Detalle de venta #${record.receiptNo||''}`;
+
+  sub.textContent = `${sourceLabel} · ${record.saleType || 'MOSTRADOR'} · ${saleDetailPayment(record)}`;
+
+  // 🔽 aquí sigue TODO tu render actual (NO BORRAR)
+  // content.innerHTML = ...
+
+  // 🔥 SOLUCIÓN ACCESIBILIDAD
+  setTimeout(()=>{
+    try{
+      overlay.querySelector('.mb-modal-x')?.focus();
+    }catch(e){}
+  }, 30);
+}
 
   const isShipment = (record.saleType === 'ENVIO') || kind === 'shipment';
   const productTotal = Number((record.productTotal ?? Math.max(Number((record.total||0) - Number(record.shippingFee||0)), 0)).toFixed(2));
@@ -135,6 +167,13 @@ async function openSaleDetailModal(record, kind='sale'){
 function closeSaleDetailModal(){
   const overlay = $('saleDetailOverlay');
   if(!overlay) return;
+
+  // 🔥 quitar foco antes de ocultar
+  const active = document.activeElement;
+  if(active && overlay.contains(active)){
+    try{ active.blur(); }catch(e){}
+  }
+
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden', 'true');
 }
