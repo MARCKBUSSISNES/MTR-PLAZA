@@ -1,0 +1,81 @@
+/* Receipt */
+    .receiptWrap{ display:flex; gap:12px; flex-wrap:wrap; }
+    .receipt{
+      width: 360px; /* default; can be overridden dynamically for ENVÍO */
+      background: #ffffff;
+      border:1px solid rgba(0,0,0,.08);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 18px 34px rgba(0,0,0,.11);
+      transform-origin: top center;
+      animation: floatIn .35s ease-out both;
+      position:relative;
+    }
+    .cornerLogo{
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:60px;
+      height:60px;
+      object-fit:contain;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      padding:4px;
+    }
+      ${isEnv ? `
+      body{ background:#fff !important; color:#000 !important; }
+      .box{ border:2px solid #000 !important; background:#fff !important; }
+      .bar{ background:#000 !important; }
+      h1{ color:#000 !important; }
+      .meta{ color:#000 !important; font-weight:900 !important; }
+      th{ background:#fff !important; border-bottom:1px solid #000 !important; }
+      th,td{ border-bottom:1px solid #000 !important; color:#000 !important; }
+      .label{ color:#000 !important; font-weight:900 !important; }
+      .val{ color:#000 !important; font-weight:900 !important; }
+      .totalRow{ color:#000 !important; }
+      .cornerLogo{ border:1px solid #000 !important; }
+    ` : ""}
+    @keyframes floatIn{
+      from{ transform: translateY(10px) scale(.98); opacity:0; }
+      to{ transform: translateY(0) scale(1); opacity:1; }
+    }
+    .receipt .logo{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding-bottom:10px;
+      border-bottom:1px dashed rgba(0,0,0,.12);
+      margin-bottom:10px;
+      padding-right:60px; /* espacio para logo esquina */
+    }
+    .receipt .logo b{ font-size:14px; letter-spacing:.3px; }
+    .receipt .logo small{ display:block; color:#666; font-weight:900 }
+    .receipt .line{ display:flex; justify-content:space-between; gap:10px; font-weight:1000; font-size:12px; margin:6px 0 }
+    .receipt .line{ align-items:flex-start; }
+    .receipt .line span:first-child{ flex:0 0 90px; }
+    .receipt .line span:last-child{ flex:1 1 auto; text-align:right; word-break:break-word; overflow-wrap:anywhere; }
+    .receipt.envio .line{ font-size:11px; }
+    .receipt.envio .big{ font-size:14px; }
+    .receipt.envio{ border:2px solid #000; }
+    .receipt.envio .hr{ background: rgba(0,0,0,.35); }
+    .receipt.envio .cornerLogo{
+      /* mantener mismo logo/tamaño del sitio; solo más contraste general se maneja por tipografía */
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .receipt .hr{ height:1px; background:rgba(0,0,0,.08); margin:10px 0 }
+    .receipt .big{ font-size:16px; font-weight:1200; display:flex; justify-content:space-between; margin-top:10px; }
+    .receipt .foot{ margin-top:10px; font-size:11px; color:#666; font-weight:900 }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:1000;
+      font-size:11px;
+      padding: 4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.10);
+      background: rgba(255,255,255,.7);
+      margin-top:6px;
+    }
+    .badge.pending{ border-color: rgba(245,158,11,.40); background: rgba(245,158,11,.12); color:#7a4b00; }
+    .badge.paid{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12); color:#0e5b2a; }
